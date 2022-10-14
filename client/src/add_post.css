@@ -1,0 +1,13 @@
+li {
+    list-style-type: none;
+    display: flex;
+    justify-content: space-between;
+}
+
+input {
+    margin-top: 10%;
+}
+
+.categories{
+    margin-left: 20px;
+}
