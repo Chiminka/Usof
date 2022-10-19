@@ -38,7 +38,7 @@ export const PostPage = () => {
         try {
             dispatch(removePost(params.id))
             toast('Post was deleted')
-            navigate('/posts')
+            navigate('/')
         } catch (error) {
             console.log(error)
         }

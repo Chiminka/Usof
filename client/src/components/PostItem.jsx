@@ -7,7 +7,6 @@ import axios from '../utils/axios'
 import { CategoryItem } from '../components/CategoryItem'
 import { useCallback } from 'react'
 
-
 export const PostItem = ({ post }) => {
     const [comments, setComments] = useState([])
     const [categories, setCategories] = useState([])
@@ -41,7 +40,7 @@ export const PostItem = ({ post }) => {
     return (
         <Link to={`/${post._id}`}>
             <div className='flex flex-col basis-1/4 flex-grow'>
-                <div
+                {/* <div
                     className={
                         post.imgUrl ? 'flex rouded-sm h-80' : 'flex rounded-sm'
                     }
@@ -53,7 +52,7 @@ export const PostItem = ({ post }) => {
                             className='object-cover w-full'
                         />
                     )}
-                </div>
+                </div> */}
                 <div className='flex justify-between items-center pt-2'>
                     <div className='text-xs text-white opacity-50'>
                         {post.username}
@@ -75,11 +74,9 @@ export const PostItem = ({ post }) => {
                         <AiOutlineMessage />{' '}
                         <span>{comments?.length || 0} </span>
                     </button>
-                    <div>
-                        {categories?.map((category) => (
+                    <span>{categories.map((category) => (
                             <CategoryItem key={category._id} category={category} />
-                        ))}
-                    </div>
+                        ))}</span>
                 </div>
             </div>
         </Link>

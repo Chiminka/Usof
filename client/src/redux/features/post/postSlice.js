@@ -34,15 +34,10 @@ export const getAllCategories = createAsyncThunk(
 
 export const createPost = createAsyncThunk(
   "post/createPost",
-  async ({ title, text, category, image }) => {
+  async (formData) => {
     try {
-      let categories = JSON.parse(category);
-      const { data } = await axios.post("/posts", {
-        title,
-        text,
-        categories,
-        image,
-      });
+      // let categories = JSON.parse(category);
+      const { data } = await axios.post("/posts", formData);
       return data;
     } catch (error) {
       console.log(error);
@@ -70,18 +65,9 @@ export const removePost = createAsyncThunk("post/removePost", async (id) => {
 
 export const updatePost = createAsyncThunk(
   "post/updatePost",
-  async ({ id, title, text, status, category, newImage }) => {
+  async (formData) => {
     try {
-      let categories = JSON.parse(category);
-      console.log("111", { title, text, categories, newImage });
-      const { data } = await axios.patch(`/posts/${id}`, {
-        id,
-        title,
-        text,
-        status,
-        categories,
-        newImage,
-      });
+      const { data } = await axios.patch(`/posts/${formData.id}`, formData);
       return data;
     } catch (error) {
       console.log(error);

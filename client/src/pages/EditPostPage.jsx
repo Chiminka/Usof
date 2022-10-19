@@ -1,8 +1,9 @@
 import React from 'react'
 import { useEffect, useState, useCallback } from 'react'
-import { useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import { updatePost } from '../redux/features/post/postSlice'
+import '../../src/add_post.css';
 
 import axios from '../utils/axios'
 
@@ -12,9 +13,12 @@ export const EditPostPage = () => {
     const [oldImage, setOldImage] = useState('')
     const [newImage, setNewImage] = useState('')
     const [status, setStatus] = useState('')
-    const [categories, setCategories] = useState([])
-    const [addCategories, setCategory] = useState([])
+    const {categories} = useSelector((state) => state.post)
+    const [editCategory, setEditCategory] = useState([])
+    let [addCategories, setCategory] = useState([])
+    const [categoriesTitle, setString] = useState([])
 
+    //осталось только вывести
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const params = useParams()
@@ -25,15 +29,47 @@ export const EditPostPage = () => {
         setText(data.text)
         setOldImage(data.imgUrl)
         setStatus(data.status)
-        setCategories(data.categories)
+        let titles_mas = []
+        let chosenCategory = []
+        {categories?.map((title, index) => {  
+            chosenCategory.push(title)   
+        })}
+        for (let i = 0; i<chosenCategory.length; i++) {                                                  
+            titles_mas.push(chosenCategory[i].title)
+        }
+        setString(titles_mas.join('/'))
+        
+        let inp = document.getElementsByClassName('category')
+        let length = inp.length
+        const length2 = chosenCategory.length
+        for (let i = 0; i<length; i++) {
+            for (let j = 0; j < length2; j++) {
+                if(inp[i].value === chosenCategory[j]._id) {
+                    inp[i].checked = true
+                }                                         
+            }                                         
+        }
     }, [params.id])
 
     const submitHandler = () => {
         try {
-            const category = JSON.stringify(addCategories)
             const id = params.id
-            dispatch(updatePost({id, title, text, status, category, newImage}))
-            navigate('/posts')
+            let formData = new FormData()
+            formData.append('title', title)
+            formData.append('text', text)
+            formData.append('status', status)
+            formData.append('id', id)
+            if (addCategories.length === 0) {
+                addCategories = []
+               formData.append('categories', addCategories)
+            }
+            for (let i = 0; i<addCategories.length; i++){
+                formData.append('categories', addCategories[i])
+            }
+            formData.append('image', newImage) 
+
+            dispatch(updatePost(formData))
+            navigate('/')
         } catch (error) {
             console.log(error)
         }
@@ -43,13 +79,29 @@ export const EditPostPage = () => {
         setTitle('')
         setText('')
         setStatus('')
-        setCategories('')
+        setCategory('')
+    }
+
+    const callFunction = async () => {
+        const { data } = await axios.get(`/categories`)
+        setEditCategory(data)
     }
 
     useEffect(() => {
         fetchPost()
+        callFunction()
     }, [fetchPost])
 
+    let chosenCategory = []
+    {categories?.map((title, index) => {  
+        return chosenCategory.push(title._id)   
+    })}
+
+    let allCategory = []
+    {editCategory.categories?.map((title, index) => {  
+        return allCategory.push(title._id)   
+    })}
+ 
     return (
         <form
             className='w-1/3 mx-auto py-10'
@@ -80,7 +132,6 @@ export const EditPostPage = () => {
                     />
                 )}
             </div>
-
             <label className='text-xs text-white opacity-70'>
                 Title of post:
                 <input
@@ -91,7 +142,6 @@ export const EditPostPage = () => {
                     className='mt-1 text-black w-full rounded-lg bg-gray-400 border py-1 px-2 text-xs outline-none placeholder:text-gray-700'
                 />
             </label>
-
             <label className='text-xs text-white opacity-70'>
                 Text of post:
                 <textarea
@@ -101,34 +151,33 @@ export const EditPostPage = () => {
                     className='mt-1 text-black w-full rounded-lg bg-gray-400 border py-1 px-2 text-xs outline-none resize-none h-40 placeholder:text-gray-700'
                 />
             </label>
-            {categories.map((title, index) => {  
-                return (
-                    <li key={index} >
-                        <div className="text-xs text-white opacity-70">
-                            <div className="left-section">
-                                <input
-                                    className='category'
-                                    type="checkbox"
-                                    value={title._id}
-                                    onChange= {function () {
-                                        let inp = document.getElementsByClassName('category')
+           <div><span className="text-xs text-white opacity-70">{categoriesTitle}</span> </div>
+            <label className='text-xs text-white opacity-70'>Change categories:</label>
+             <div class="container">
+  <ul class="ks-cboxtags">
+    {editCategory.categories?.map((title, index) => {  
+        return ( 
+        <li>
+            <input type="checkbox"  className='category' id={index} name={title.title} value={title._id} onChange={function(){
+                                         let inp = document.getElementsByClassName('category')
                                         let length = inp.length
                                         let mas = []
-                                        for (let i = 0; i<length; i++) {
-                                            if(inp[i].checked) {
+                                        let titles_mas = []
+                                        for (let i = 0; i<length; i++) {                                   
+                                            if(inp[i].checked) {                   
                                                 mas.push(inp[i].value)
+                                                titles_mas.push(inp[i].name)
                                             }
                                         }
+                                        setString(titles_mas.join('/'))
                                         setCategory(mas)
-                                    }}
-                                />
-                                <label className='categories' htmlFor={`custom-checkbox-${index}`}>{title.title}</label>
-                            </div>
-                        </div>
-                    </li>
-                )       
-            })}
-            <div className='flex gap-8 items-center justify-center mt-4'>
+                }}/>
+            <label for={index}>{title.title}</label>
+        </li>)
+    })}
+  </ul>
+</div>
+                <div className='flex gap-8 items-center justify-center mt-4'>
                 <button
                     onClick={submitHandler}
                     className='flex justify-center items-center bg-gray-600 text-xs text-white rounded-sm py-2 px-4'
