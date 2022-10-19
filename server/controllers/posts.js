@@ -160,9 +160,9 @@ export class PostController {
   // Update post
   async updatePost(req, res) {
     try {
-      const { title, text, status, categories } = req.body;
+      const { id, title, text, status, categories } = req.body;
 
-      const post = await Post.findById(req.params.id);
+      const post = await Post.findById(id);
       const user = await User.findById(req.user.id);
 
       const userId = user._id;
@@ -177,19 +177,22 @@ export class PostController {
         }
         if (title) post.title = title;
         if (text) post.text = text;
-        if (categories) post.categories = categories;
+        if (categories.length === 0) {
+          post.categories = [];
+        } else if (categories) post.categories = categories;
 
         await post.save();
 
         res.json(post);
       } else if (user.role === "admin") {
         post.status = status;
-        if (categories) post.categories = categories;
+        if (categories.length === 0) {
+          post.categories = null;
+        } else if (categories) post.categories = categories;
         await post.save();
         res.json(post);
       } else res.json("it's not your post");
     } catch (error) {
-      console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }
