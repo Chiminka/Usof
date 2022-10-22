@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { PopularPosts } from '../components/PopularPosts'
 import { PostItem } from '../components/PostItem'
 import { getAllPosts } from '../redux/features/post/postSlice'
-// import { getPostCategories } from '../redux/features/category/categorySlice'
 import {Pagination} from '../components/Pagination'
 import { checkIsAuth } from '../redux/features/auth/authSlice'
 

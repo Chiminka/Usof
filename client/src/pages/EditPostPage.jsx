@@ -13,7 +13,7 @@ export const EditPostPage = () => {
     const [oldImage, setOldImage] = useState('')
     const [newImage, setNewImage] = useState('')
     const [status, setStatus] = useState('')
-    const {categories} = useSelector((state) => state.post)
+    const {categories} = useSelector((state) => state.category)
     const [editCategory, setEditCategory] = useState([])
     let [addCategories, setCategory] = useState([])
     const [categoriesTitle, setString] = useState([])
@@ -69,7 +69,7 @@ export const EditPostPage = () => {
             formData.append('image', newImage) 
 
             dispatch(updatePost(formData))
-            navigate('/')
+            navigate('/main')
         } catch (error) {
             console.log(error)
         }
@@ -80,6 +80,7 @@ export const EditPostPage = () => {
         setText('')
         setStatus('')
         setCategory('')
+        navigate('/main')
     }
 
     const callFunction = async () => {
@@ -172,7 +173,7 @@ export const EditPostPage = () => {
                                         setString(titles_mas.join('/'))
                                         setCategory(mas)
                 }}/>
-            <label for={index}>{title.title}</label>
+            <label htmlFor={index}>{title.title}</label>
         </li>)
     })}
   </ul>

@@ -10,6 +10,12 @@ import { useCallback } from 'react'
 export const PostItem = ({ post }) => {
     const [comments, setComments] = useState([])
     const [categories, setCategories] = useState([])
+    const [user, setUser] = useState([])
+    
+    const fetchAllUser = useCallback(async () => {
+        const { data } = await axios.get(`/users`)
+        setUser(data)
+    }, [])
 
     const fetchPostComments = useCallback(async () => {
         const { data } = await axios.get(`/posts/${post._id}/comments`)
@@ -20,6 +26,10 @@ export const PostItem = ({ post }) => {
         const { data } = await axios.get(`/posts/${post._id}/categories`)
         setCategories(data)
     }, [post._id])
+
+    useEffect(() => {
+        fetchAllUser()
+    }, [fetchAllUser])
 
      useEffect(() => {
         fetchPostComments()
@@ -37,23 +47,23 @@ export const PostItem = ({ post }) => {
         )
     }
 
+    const author = () => {
+        const userArr = []
+        user.users?.map((author, idx)=>{
+           return userArr.push(author)
+        })
+        for ( let i = 0; i<userArr.length; i++){
+            if (post.author === userArr[i]._id) {
+                return userArr[i].username
+            }
+        }
+    }
+
     return (
-        <Link to={`/${post._id}`}>
-            <div className='flex flex-col basis-1/4 flex-grow'>
-                {/* <div
-                    className={
-                        post.imgUrl ? 'flex rouded-sm h-80' : 'flex rounded-sm'
-                    }
-                >
-                    {post.imgUrl && (
-                        <img
-                            src={`http://localhost:3002/${post.imgUrl}`}
-                            alt='img'
-                            className='object-cover w-full'
-                        />
-                    )}
-                </div> */}
-                <div className='flex justify-between items-center pt-2'>
+        <Link to={`/posts/${post._id}`}>
+            <div className='flex flex-col basis-1/4 flex-grow mt-10'>
+                <div className='flex justify-between items-center pt-2 text-sm text-white opacity-19'>
+                      {author()}
                     <div className='text-xs text-white opacity-50'>
                         {post.username}
                     </div>
@@ -76,7 +86,10 @@ export const PostItem = ({ post }) => {
                     </button>
                     <span>{categories.map((category) => (
                             <CategoryItem key={category._id} category={category} />
-                        ))}</span>
+                        ))}
+                    </span>
+                </div>
+                <div className='text-xs text-white opacity-50'>
                 </div>
             </div>
         </Link>

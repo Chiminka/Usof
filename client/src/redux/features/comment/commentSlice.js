@@ -3,21 +3,8 @@ import axios from "../../../utils/axios";
 
 const initialState = {
   comments: [],
-  categories: [],
   loading: false,
 };
-
-export const getPostCategories = createAsyncThunk(
-  "category/getPostCategories",
-  async (postId) => {
-    try {
-      const { data } = await axios.get(`/posts/${postId}/categories`);
-      return data;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-);
 
 export const createComment = createAsyncThunk(
   "comment/createComment",
@@ -63,17 +50,6 @@ export const commentSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: {
-    // Получение категорий
-    [getPostCategories.pending]: (state) => {
-      state.loading = true;
-    },
-    [getPostCategories.fulfilled]: (state, action) => {
-      state.loading = false;
-      state.categories = action.payload;
-    },
-    [getPostCategories.rejected]: (state) => {
-      state.loading = false;
-    },
     // Создание comment
     [createComment.pending]: (state) => {
       state.loading = true;

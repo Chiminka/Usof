@@ -4,33 +4,9 @@ import axios from "../../../utils/axios";
 const initialState = {
   posts: [],
   popularPosts: [],
-  categories: [],
+  likes: [],
   loading: false,
 };
-
-export const getPostCategories = createAsyncThunk(
-  "category/getPostCategories",
-  async (postId) => {
-    try {
-      const { data } = await axios.get(`/posts/${postId}/categories`);
-      return data;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-);
-
-export const getAllCategories = createAsyncThunk(
-  "category/getAllCategories",
-  async () => {
-    try {
-      const { data } = await axios.get(`/categories`);
-      return data;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-);
 
 export const createPost = createAsyncThunk(
   "post/createPost",
@@ -38,6 +14,47 @@ export const createPost = createAsyncThunk(
     try {
       // let categories = JSON.parse(category);
       const { data } = await axios.post("/posts", formData);
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+export const createLike_Dislike = createAsyncThunk(
+  "post/createLike_Dislike",
+  async ({ postId, type }) => {
+    try {
+      const { data } = await axios.post(`/posts/${postId}/like`, {
+        postId,
+        type,
+      });
+      console.log({ postId, type });
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+export const getLike_Dislike = createAsyncThunk(
+  "post/getLike_Dislike",
+  async (id) => {
+    try {
+      const { data } = await axios.get(`/posts/${id}/like`);
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+export const deleteLike_Dislike = createAsyncThunk(
+  "post/deleteLike_Dislike",
+  async ({ postId }) => {
+    try {
+      const { data } = await axios.delete(`/posts/${postId}/like`, postId);
+      console.log(data);
       return data;
     } catch (error) {
       console.log(error);
@@ -76,30 +93,43 @@ export const updatePost = createAsyncThunk(
 );
 
 export const postSlice = createSlice({
-  name: "post",
+  name: "category",
   initialState,
   reducers: {},
   extraReducers: {
-    // Получаение всех категорий
-    [getAllCategories.pending]: (state) => {
+    // Получаение лайков
+    [getLike_Dislike.pending]: (state) => {
       state.loading = true;
     },
-    [getAllCategories.fulfilled]: (state, action) => {
+    [getLike_Dislike.fulfilled]: (state, action) => {
       state.loading = false;
-      state.categories = action.payload.categories;
+      state.likes = action.payload.likes;
     },
-    [getAllCategories.rejected]: (state) => {
+    [getLike_Dislike.rejected]: (state) => {
       state.loading = false;
     },
-    // Получение категорий
-    [getPostCategories.pending]: (state) => {
+    // Удаление лайка
+    [deleteLike_Dislike.pending]: (state) => {
       state.loading = true;
     },
-    [getPostCategories.fulfilled]: (state, action) => {
+    [deleteLike_Dislike.fulfilled]: (state, action) => {
       state.loading = false;
-      state.categories = action.payload;
+      state.likes = state.likes.filter(
+        (like) => like._id !== action.payload._id
+      );
     },
-    [getPostCategories.rejected]: (state) => {
+    [deleteLike_Dislike.rejected]: (state) => {
+      state.loading = false;
+    },
+    // Создание лайка
+    [createLike_Dislike.pending]: (state) => {
+      state.loading = true;
+    },
+    [createLike_Dislike.fulfilled]: (state, action) => {
+      state.loading = false;
+      state.likes.push(action.payload);
+    },
+    [createLike_Dislike.rejected]: (state) => {
       state.loading = false;
     },
     // Создание поста

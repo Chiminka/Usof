@@ -7,28 +7,32 @@ import {
     AiFillEye,
     AiOutlineMessage,
     AiTwotoneEdit,
-    AiFillDelete,
+    AiFillDelete
 } from 'react-icons/ai'
 import Moment from 'react-moment'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
-
 import axios from '../utils/axios'
-import { removePost } from '../redux/features/post/postSlice'
+import { removePost, createLike_Dislike, deleteLike_Dislike, getLike_Dislike} from '../redux/features/post/postSlice'
+import {getPostCategories} from '../redux/features/category/categorySlice'
 import {
     createComment,
-    getPostComments,
-    getPostCategories,
+    getPostComments
 } from '../redux/features/comment/commentSlice'
 import { CommentItem } from '../components/CommentItem'
 import { CategoryItem } from '../components/CategoryItem'
+import '../like_dislike.css'
 
 export const PostPage = () => {
     const [post, setPost] = useState(null)
     const [comment, setComment] = useState('')
-
+    let [type, setLike] = useState('')
+    const [users, setUser] = useState([])
     const { user } = useSelector((state) => state.auth)
-    const { comments,  categories} = useSelector((state) => state.comment)
+    const { categories} = useSelector((state) => state.category)
+    const { comments} = useSelector((state) => state.comment)
+    const [checked, setChecked] = useState(false)
+    const [checkedDislike, setCheckedDislike] = useState(false)
 
     const navigate = useNavigate()
     const params = useParams()
@@ -38,11 +42,16 @@ export const PostPage = () => {
         try {
             dispatch(removePost(params.id))
             toast('Post was deleted')
-            navigate('/')
+            navigate('/main')
         } catch (error) {
             console.log(error)
         }
     }
+
+    const fetchAllUser = useCallback(async () => {
+        const { data } = await axios.get(`/users`)
+        setUser(data)
+    }, [])
 
     const handleSubmit = () => {
         try {
@@ -62,6 +71,7 @@ export const PostPage = () => {
         }
     }, [params.id, dispatch])
 
+
      const fetchCategories = useCallback(async () => {
         try {
             dispatch(getPostCategories(params.id))
@@ -70,10 +80,58 @@ export const PostPage = () => {
         }
     }, [params.id, dispatch])
 
+
     const fetchPost = useCallback(async () => {
         const { data } = await axios.get(`/posts/${params.id}`)
         setPost(data)
     }, [params.id])
+
+
+
+
+    const fetchLikes = useCallback(async () => {
+        const { data } = await axios.get(`/posts/${params.id}/like`)
+        const authorr = []
+        let types = ''
+        {data?.map((like, index) => { 
+            console.log('types', like) 
+            authorr.push(like.author) 
+            types = like.type
+        })}
+        for (let i = 0; i<authorr.length; i++){
+            if(data.length > 0 && types === 'like' && authorr[i] === user._id) {
+                setChecked(!checked)
+                setLike('islike')  
+            } else if(data.length > 0 && types === 'dislike' && authorr[i] === user._id) {
+            setCheckedDislike(!checked)
+            setLike('islike')  
+        }
+
+        }
+    }, [])
+
+    const likeHandler = () => {
+        try {
+            const postId = params.id
+            if (type !== 'islike'){
+                 if (type === 'like' || type === 'dislike')
+                    dispatch(createLike_Dislike({ postId, type }))
+                else if (type === 'deletelike' || type === 'deletedislike')
+                    dispatch(deleteLike_Dislike({ postId }))
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+
+    useEffect(() => {
+        fetchLikes()
+    }, [fetchLikes])
+
+    useEffect(() => {
+        fetchAllUser()
+    }, [fetchAllUser])
 
     useEffect(() => {
         fetchPost()
@@ -94,6 +152,19 @@ export const PostPage = () => {
             </div>
         )
     }
+
+    const author = () => {
+        const userArr = []
+        users.users?.map((author, idx)=>{
+           return userArr.push(author)
+        })
+        for ( let i = 0; i<userArr.length; i++){
+            if (post.author === userArr[i]._id) {
+                return userArr[i].username
+            }
+        }
+    }
+
     return (
         <div>
             <button className='flex justify-center items-center bg-gray-600 text-xs text-white rounded-sm py-2 px-4'>
@@ -123,8 +194,8 @@ export const PostPage = () => {
                     </div>
 
                     <div className='flex justify-between items-center pt-2'>
-                        <div className='text-xs text-white opacity-50'>
-                            {post.username}
+                        <div className='text-sm text-white opacity-19'>
+                            {author()}
                         </div>
                         <div className='text-xs text-white opacity-50'>
                             <Moment date={post.createdAt} format='D MMM YYYY' />
@@ -167,6 +238,47 @@ export const PostPage = () => {
                                 </button>
                             </div>
                         )}
+                    </div>
+                    <div className='inline-flex items-center justify-center gap-2  text-white opacity-50 mt-4 pr-4'>
+                        <div class="container">
+                            <ul class="ks-cboxtags">
+                                <li>
+                                    <input
+                                        id={1}
+                                        type='checkbox'
+                                        checked={checked}
+                                        onChange={function(){
+                                            setChecked(!checked)
+                                            setCheckedDislike(false)
+                                            if(!checked) {
+                                                setLike('like')       
+                                            } else if (checked)
+                                                setLike('deletelike')   
+                                            console.log(type)
+                                        }}
+                                        className='like'
+                                    /><label className='like' htmlFor={1}>like</label>
+                                </li>
+                                <li>
+                                    <input
+                                        id={2}
+                                        type='checkbox'
+                                        checked={checkedDislike}
+                                        onChange={function(){
+                                            setCheckedDislike(!checkedDislike)
+                                            setChecked(false)
+                                            if(!checkedDislike) {
+                                                setLike('dislike')       
+                                            } else if (checkedDislike)
+                                                setLike('deletedislike')   
+                                            }}
+                                        className='dislike'
+                                    />
+                                    <label className='dislike' htmlFor={2}>dislike</label>
+                                </li>
+                            </ul>
+                        </div>
+                        {likeHandler()}
                     </div>
                 </div>
                 <div className='w-1/3 p-8 bg-gray-700 flex flex-col gap-2 rounded-sm'>

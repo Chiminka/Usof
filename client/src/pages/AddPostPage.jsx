@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { createPost } from '../redux/features/post/postSlice'
-import { getAllCategories } from '../redux/features/post/postSlice'
+import { getAllCategories } from '../redux/features/category/categorySlice'
 import '../../src/add_post.css';
 
 export const AddPostPage = () => {
@@ -11,7 +11,7 @@ export const AddPostPage = () => {
     const [addCategories, setCategory] = useState([])
     const [categoriesTitle, setString] = useState([])
     const [image, setImage] = useState('')
-    const {categories} = useSelector((state) => state.post)
+    const {categories} = useSelector((state) => state.category)
 
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -31,7 +31,7 @@ export const AddPostPage = () => {
             //     console.log("hello", pair[0]+', '+pair[1])
             // }
             dispatch(createPost(formData))
-            navigate('/')
+            navigate('/main')
         } catch (error) {
             console.log(error)
         }
@@ -106,42 +106,11 @@ export const AddPostPage = () => {
                                         setString(titles_mas.join('/'))
                                         setCategory(mas)
                 }}/>
-            <label for={index}>{title.title}</label>
+            <label htmlFor={index}>{title.title}</label>
         </li>)
     })}
   </ul>
 </div>
-            {/* {categories.map((title, index) => {  
-                return (
-                    <li className='ks-cboxtags' key={index} >
-                        <div className="text-xs text-white opacity-70">
-                            <div className="left-section">
-                                <input
-                                    className='category'
-                                    type="checkbox"
-                                    value={title._id}
-                                    name={title.title}
-                                    onChange= {function () {
-                                        let inp = document.getElementsByClassName('category')
-                                        let length = inp.length
-                                        let mas = []
-                                        let titles_mas = []
-                                        for (let i = 0; i<length; i++) {
-                                            if(inp[i].checked) {
-                                                mas.push(inp[i].value)
-                                                titles_mas.push(inp[i].name)
-                                            }
-                                        }
-                                        setString(titles_mas.join('/'))
-                                        setCategory(mas)
-                                    }}
-                                />
-                                <label className='categories' htmlFor={`custom-checkbox-${index}`}>{title.title}</label>
-                            </div>
-                        </div>
-                    </li>
-                )       
-            })} */}
             <div className='flex gap-8 items-center justify-center mt-4'>
                 <button
                     onClick={submitHandler}

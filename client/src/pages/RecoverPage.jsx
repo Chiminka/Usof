@@ -50,13 +50,13 @@ export const RecoverPage = () => {
                 <Link
                     type='submit'
                     onClick={handleSubmit}
-                    to='/login'
+                    to='/'
                     className='flex justify-center items-center text-xs bg-gray-600 text-white rounded-sm py-2 px-4'
                 >
                     Submit
                 </Link>
                 <Link
-                    to='/login'
+                    to='/'
                     className='flex justify-center items-center text-xs text-white'
                 >
                     Return

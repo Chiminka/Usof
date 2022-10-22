@@ -1,12 +1,14 @@
-import { configureStore } from '@reduxjs/toolkit'
-import authSlice from './features/auth/authSlice'
-import postSlice from './features/post/postSlice'
-import commentSlice from './features/comment/commentSlice'
+import { configureStore } from "@reduxjs/toolkit";
+import authSlice from "./features/auth/authSlice";
+import postSlice from "./features/post/postSlice";
+import commentSlice from "./features/comment/commentSlice";
+import categorySlice from "./features/category/categorySlice";
 
 export const store = configureStore({
-    reducer: {
-        auth: authSlice,
-        post: postSlice,
-        comment: commentSlice,
-    },
-})
+  reducer: {
+    auth: authSlice,
+    post: postSlice,
+    comment: commentSlice,
+    category: categorySlice,
+  },
+});

@@ -105,7 +105,7 @@ export const RegisterPage = () => {
                     Submit
                 </button>
                 <Link
-                    to='/login'
+                    to='/'
                     className='flex justify-center items-center text-xs text-white'
                 >
                     Already have an account 

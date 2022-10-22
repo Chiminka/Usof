@@ -15,6 +15,8 @@ import { useEffect } from "react";
 import { getMe } from "./redux/features/auth/authSlice.js";
 import { VerificationPage } from "./pages/VerificationPage";
 import { VerifiedEmail } from "./pages/VerifiedEmail";
+import { CategoriesPage } from "./pages/CategoriesPage";
+import { CategoryPage } from "./pages/CategoryPage";
 
 import "react-toastify/dist/ReactToastify.css";
 
@@ -28,17 +30,19 @@ function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<MainPage />} />
+        <Route path="main" element={<MainPage />} />
         <Route path="posts" element={<PostsPage />} />
         <Route path="users/posts" element={<PostsPage />} />
-        <Route path=":id" element={<PostPage />} />
+        <Route path="posts/:id" element={<PostPage />} />
         <Route path=":id/edit" element={<EditPostPage />} />
         <Route path="new" element={<AddPostPage />} />
         <Route path="register" element={<RegisterPage />} />
-        <Route path="login" element={<LoginPage />} />
+        <Route path="/" element={<LoginPage />} />
         <Route path="recover" element={<RecoverPage />} />
         <Route path="recover/:token" element={<VerificationPage />} />
         <Route path="verify/:token" element={<VerifiedEmail />} />
+        <Route path="categories" element={<CategoriesPage />} />
+        <Route path="categories/:id" element={<CategoryPage />} />
       </Routes>
 
       <ToastContainer position="bottom-right" />

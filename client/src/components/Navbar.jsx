@@ -62,14 +62,26 @@ export const Navbar = () => {
                             Add post
                         </NavLink>
                     </li>
+                     <li>
+                        <NavLink
+                            to={'/categories'}
+                            href='/'
+                            className='text-xs text-gray-400 hover:text-white'
+                            style={({ isActive }) =>
+                                isActive ? activeStyles : undefined
+                            }
+                        >
+                            Categories
+                        </NavLink>
+                    </li>
                 </ul>
             )}
 
             <div className='flex justify-center items-center bg-gray-600 text-xs text-white rounded-sm px-4 py-2'>
                 {isAuth ? (
-                    <button onClick={logoutHandler}>Sign out</button>
+                    <Link to={'/'} onClick={logoutHandler}>Sign out</Link>
                 ) : (
-                    <Link to={'/login'}> Sign in </Link>
+                    <Link to={'/'}> Sign in </Link>
                 )}
             </div>
         </div>
