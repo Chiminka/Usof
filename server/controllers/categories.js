@@ -50,15 +50,19 @@ export class CategoryController {
       //только админ
       const user = await User.findById(req.user.id);
       if (user.role === "admin") {
+        const { post_id } = req.body;
         const category = await Category.findByIdAndDelete(req.params.id);
         if (!category)
           return res.json({ message: "That category is not exist" });
-        await Post.findByIdAndUpdate(req.postId, {
-          $pull: { categories: req.params.id },
-        });
+        for (let i = 0; i < post_id.length; i++) {
+          await Post.findByIdAndUpdate(post_id[i], {
+            $pull: { categories: req.params.id },
+          });
+        }
         res.json({ message: "Category was deleted" });
       } else return res.json("You're not an admin");
     } catch (error) {
+      console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }

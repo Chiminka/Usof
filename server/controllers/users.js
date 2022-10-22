@@ -14,7 +14,9 @@ export class UserController {
       const user = await User.findById(req.user.id);
       const userId = user.id;
 
-      const arr = await Post.find({ author: { _id: userId } });
+      const arr = await Post.find({ author: { _id: userId } }).sort(
+        "-updatedAt"
+      );
       res.json(arr);
     } catch (error) {
       res.json({ message: "Something gone wrong" });

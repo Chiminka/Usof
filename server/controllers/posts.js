@@ -240,77 +240,83 @@ export class PostController {
   async createLikes(req, res) {
     try {
       const { type } = req.body;
-      // если у поля лайки есть такой же коммент и автор, тогда говно
-      const isLiked = await Like.findOne({
-        post_or_comment_id: { _id: req.params.id },
-        author: { _id: req.user.id },
-      });
-
-      if (!isLiked) {
-        const newLike = new Like({
-          post_or_comment: "Post",
-          post_or_comment_id: req.params.id,
-          type,
-          author: req.user.id,
+      if (type === "like" || type === "dislike") {
+        // если у поля лайки есть такой же коммент и автор, тогда говно
+        const isLiked = await Like.findOne({
+          post_or_comment_id: { _id: req.params.id },
+          author: { _id: req.user.id },
         });
 
-        if (type === "like") {
-          const post = await Post.findByIdAndUpdate(req.params.id, {
-            $inc: { likes: 1 },
+        if (!isLiked) {
+          const newLike = new Like({
+            post_or_comment: "Post",
+            post_or_comment_id: req.params.id,
+            type,
+            author: req.user.id,
           });
-          const user = await User.findByIdAndUpdate(post.author._id, {
-            $inc: { rating: 1 },
-          });
-        } else if (type === "dislike") {
-          const post = await Post.findById(req.params.id);
-          if (post.likes == 0) {
-          } else
-            await Post.findByIdAndUpdate(req.params.id, {
+
+          if (type === "like") {
+            const post = await Post.findByIdAndUpdate(req.params.id, {
+              $inc: { likes: 1 },
+            });
+            const user = await User.findByIdAndUpdate(post.author._id, {
+              $inc: { rating: 1 },
+            });
+          } else if (type === "dislike") {
+            const post = await Post.findById(req.params.id);
+            if (post.likes == 0) {
+            } else
+              await Post.findByIdAndUpdate(req.params.id, {
+                $inc: { likes: -1 },
+              });
+            const user = await User.findByIdAndUpdate(post.author._id);
+            if (user.rating == 0) {
+            } else
+              await User.findByIdAndUpdate(post.author._id, {
+                $inc: { rating: -1 },
+              });
+          }
+          await newLike.save();
+          res.json({ message: "Creating like or dislike success" });
+        } else if (
+          ((isLiked.type === "like" && type === "dislike") ||
+            (isLiked.type === "dislike" && type === "like")) &&
+          isLiked.author._id.equals(req.user._id)
+        ) {
+          if (type === "dislike") {
+            const like = await Like.findOne({
+              author: req.user.id,
+              post_or_comment_id: req.params.id,
+              post_or_comment: "Post",
+              type: "like",
+            });
+            like.type = "dislike";
+            await like.save();
+            const post = await Post.findByIdAndUpdate(req.params.id, {
               $inc: { likes: -1 },
             });
-          const user = await User.findByIdAndUpdate(post.author._id);
-          if (user.rating == 0) {
-          } else
-            await User.findByIdAndUpdate(post.author._id, {
+            const user = await User.findByIdAndUpdate(post.author._id, {
               $inc: { rating: -1 },
             });
-        }
-        await newLike.save();
-        res.json({ message: "Creating like or dislike success" });
-      } else if (
-        ((isLiked.type === "like" && type === "dislike") ||
-          (isLiked.type === "dislike" && type === "like")) &&
-        isLiked.author._id.equals(req.user._id)
-      ) {
-        if (type === "dislike") {
-          const like = await Like.findOneAndUpdate({
-            author: req.user.id,
-            post_or_comment: "Post",
-            post_or_comment_id: req.params.id,
-            type: "dislike",
-          });
-          const post = await Post.findByIdAndUpdate(req.params.id, {
-            $inc: { likes: -1 },
-          });
-          const user = await User.findByIdAndUpdate(post.author._id, {
-            $inc: { rating: -1 },
-          });
-        } else if (type === "like") {
-          const like = await Like.findOneAndUpdate({
-            author: req.user.id,
-            post_or_comment: "Post",
-            post_or_comment_id: req.params.id,
-            type: "like",
-          });
-          const post = await Post.findByIdAndUpdate(req.params.id, {
-            $inc: { likes: 1 },
-          });
-          const user = await User.findByIdAndUpdate(post.author._id, {
-            $inc: { rating: 1 },
-          });
-        }
-        res.json({ message: "Creating like or dislike success" });
-      } else res.json({ message: "It already has like or dislike" });
+          } else if (type === "like") {
+            const like = await Like.findOne({
+              author: req.user.id,
+              post_or_comment_id: req.params.id,
+              post_or_comment: "Post",
+              type: "dislike",
+            });
+            like.type = "like";
+            await like.save();
+            const post = await Post.findByIdAndUpdate(req.params.id, {
+              $inc: { likes: 1 },
+            });
+            const user = await User.findByIdAndUpdate(post.author._id, {
+              $inc: { rating: 1 },
+            });
+          }
+          res.json({ message: "Creating like or dislike success" });
+        } else res.json({ message: "It already has like or dislike" });
+      }
     } catch (error) {
       console.log(error);
       res.json({ message: "Something gone wrong" });
