@@ -1,5 +1,5 @@
 import React from 'react'
-import { AiFillEye, AiOutlineMessage } from 'react-icons/ai'
+import { AiFillEye, AiOutlineMessage, AiFillLike } from 'react-icons/ai'
 import Moment from 'react-moment'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -83,6 +83,10 @@ export const PostItem = ({ post }) => {
                     <button className='flex items-center justify-center gap-2 text-xs text-white opacity-50'>
                         <AiOutlineMessage />{' '}
                         <span>{comments?.length || 0} </span>
+                    </button>
+                    <button className='flex items-center justify-center gap-2 text-xs text-white opacity-50'>
+                        <AiFillLike />{' '}
+                        <span>{post.likes || 0} </span>
                     </button>
                     <span>{categories.map((category) => (
                             <CategoryItem key={category._id} category={category} />

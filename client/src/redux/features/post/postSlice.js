@@ -64,7 +64,7 @@ export const deleteLike_Dislike = createAsyncThunk(
 
 export const getAllPosts = createAsyncThunk("post/getAllPosts", async () => {
   try {
-    const { data } = await axios.get("/posts");
+    const { data } = await axios.get(`/posts`);
     return data;
   } catch (error) {
     console.log(error);

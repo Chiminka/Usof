@@ -5,15 +5,15 @@ import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
     AiFillEye,
-    AiOutlineMessage,
     AiTwotoneEdit,
-    AiFillDelete
+    AiFillDelete,
+    AiFillLike
 } from 'react-icons/ai'
 import Moment from 'react-moment'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import axios from '../utils/axios'
-import { removePost, createLike_Dislike, deleteLike_Dislike, getLike_Dislike} from '../redux/features/post/postSlice'
+import { removePost, createLike_Dislike, deleteLike_Dislike} from '../redux/features/post/postSlice'
 import {getPostCategories} from '../redux/features/category/categorySlice'
 import {
     createComment,
@@ -86,49 +86,7 @@ export const PostPage = () => {
         setPost(data)
     }, [params.id])
 
-
-
-
-    const fetchLikes = useCallback(async () => {
-        const { data } = await axios.get(`/posts/${params.id}/like`)
-        const authorr = []
-        let types = ''
-        {data?.map((like, index) => { 
-            console.log('types', like) 
-            authorr.push(like.author) 
-            types = like.type
-        })}
-        for (let i = 0; i<authorr.length; i++){
-            if(data.length > 0 && types === 'like' && authorr[i] === user._id) {
-                setChecked(!checked)
-                setLike('islike')  
-            } else if(data.length > 0 && types === 'dislike' && authorr[i] === user._id) {
-            setCheckedDislike(!checked)
-            setLike('islike')  
-        }
-
-        }
-    }, [])
-
-    const likeHandler = () => {
-        try {
-            const postId = params.id
-            if (type !== 'islike'){
-                 if (type === 'like' || type === 'dislike')
-                    dispatch(createLike_Dislike({ postId, type }))
-                else if (type === 'deletelike' || type === 'deletedislike')
-                    dispatch(deleteLike_Dislike({ postId }))
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-
-    useEffect(() => {
-        fetchLikes()
-    }, [fetchLikes])
-
+    
     useEffect(() => {
         fetchAllUser()
     }, [fetchAllUser])
@@ -145,13 +103,67 @@ export const PostPage = () => {
         fetchCategories()
     }, [fetchCategories])
 
-    if (!post) {
+    const checkLike = (data) => {
+        console.log(data)
+        const authorr = []
+        let types = ''
+        data?.map((like, index) => { 
+            authorr.push(like.author) 
+            types = like.type
+            return true
+        })
+        for (let i = 0; i<authorr.length; i++){
+            if(data.length > 0 && types === 'like' && authorr[i] === user?._id) {
+                setChecked(!checked)
+                setLike('islike')  
+            } else if(data.length > 0 && types === 'dislike' && authorr[i] === user?._id) {
+            setCheckedDislike(!checked)
+            setLike('islike')  
+        }
+        }
+    }
+
+
+
+    const fetchLikes = async () => {
+        const { data } = await axios.get(`/posts/${params.id}/like`)
+        console.log('data',data)
+        checkLike(data)
+    }
+
+    function onLoad (){
+         if(!window.location.hash){
+            window.location=window.location+'#loaded'
+            fetchLikes()
+        }
+    }
+
+    const likeHandler = () => {
+        try {
+            const postId = params.id
+            if (type !== 'islike'){
+                 if (type === 'like' || type === 'dislike') {
+                    dispatch(createLike_Dislike({ postId, type }))
+                    // window.location.reload()
+                 }
+                else if (type === 'deletelike' || type === 'deletedislike') {
+                        dispatch(deleteLike_Dislike({ postId }))
+                        // window.location.reload()
+                }
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+
+    if (!post || !user) {
         return (
             <div className='text-xl text-center text-white py-10'>
                 Downloading...
             </div>
         )
-    }
+    } 
 
     const author = () => {
         const userArr = []
@@ -166,7 +178,7 @@ export const PostPage = () => {
     }
 
     return (
-        <div>
+        <div onLoad={onLoad()}>
             <button className='flex justify-center items-center bg-gray-600 text-xs text-white rounded-sm py-2 px-4'>
                 <Link className='flex' to={'/'}>
                     Back
@@ -212,8 +224,8 @@ export const PostPage = () => {
                                 <AiFillEye /> <span>{post.views}</span>
                             </button>
                             <button className='flex items-center justify-center gap-2 text-xs text-white opacity-50'>
-                                <AiOutlineMessage />{' '}
-                                <span>{comments?.length || 0} </span>
+                                <AiFillLike />{' '}
+                                <span>{post.likes || 0} </span>
                             </button>
                         </div>
 
@@ -222,7 +234,6 @@ export const PostPage = () => {
                                 <CategoryItem key={category._id} category={category} />
                             ))}
                         </div>
-
                         {user?._id === post.author && (
                             <div className='flex gap-3 mt-4'>
                                 <button className='flex items-center justify-center gap-2 text-white opacity-50'>
@@ -240,8 +251,8 @@ export const PostPage = () => {
                         )}
                     </div>
                     <div className='inline-flex items-center justify-center gap-2  text-white opacity-50 mt-4 pr-4'>
-                        <div class="container">
-                            <ul class="ks-cboxtags">
+                        <div className="container">
+                            <ul className="ks-cboxtags">
                                 <li>
                                     <input
                                         id={1}

@@ -19,7 +19,6 @@ export const Pagination = ({postsPerPage, totalPosts, paginate}) => {
                     </a>
                 </li>
             ))}
-            {console.log(pageNumbers)}
         </ul>
     </nav>
   )

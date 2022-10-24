@@ -87,8 +87,8 @@ export const AddPostPage = () => {
             </label> 
             <div><span className="text-xs text-white opacity-70">{categoriesTitle}</span> </div>  
             <label className='text-xs text-white opacity-70'>Choose categories:</label>
-            <div class="container">
-  <ul class="ks-cboxtags">
+            <div className="container">
+  <ul className="ks-cboxtags">
     {categories.map((title, index) => {  
         return ( 
         <li>
