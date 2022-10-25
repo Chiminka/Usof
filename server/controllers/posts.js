@@ -78,33 +78,35 @@ export class PostController {
   // Get All Posts
   async getAll(req, res) {
     try {
-      const { type, query } = req.body;
+      const { type } = req.params;
       switch (type) {
         case "sortByLikes": {
           // is status is active
           // sort by number likes
-          const popularPosts = await Post.find({ status: "active" }).sort(
-            "-likes"
-          );
-          if (!popularPosts) {
+          const posts = await Post.find({ status: "active" }).sort("-likes");
+          const popularPosts = await Post.find({ status: "active" })
+            .limit(5)
+            .sort("-views");
+          if (!posts) {
             return res.json({ message: "None posts" });
           }
-          return res.json({ popularPosts });
-        }
-        case "Category": {
-          // filter by category
-        }
-        case "Date": {
-          // filter by date
-        }
-        case "Status": {
-          // filter by status
+          return res.json({ posts, popularPosts });
         }
         default: {
           // is status is active
           // sort by date
+          const id = req.user.id;
+          const user = await User.findById(id);
+          if (user.role === "admin") {
+            const posts = await Post.find().sort("-createdAt");
+            const popularPosts = await Post.find().limit(5).sort("-views");
+            if (!posts) {
+              return res.json({ message: "None posts" });
+            }
+            return res.json({ posts, popularPosts });
+          }
           const posts = await Post.find({ status: "active" }).sort(
-            "-updatedAt"
+            "-createdAt"
           );
           const popularPosts = await Post.find({ status: "active" })
             .limit(5)

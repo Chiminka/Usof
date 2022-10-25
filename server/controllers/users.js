@@ -42,8 +42,58 @@ export class UserController {
           const salt = bcrypt.genSaltSync(10);
           const hash = bcrypt.hashSync(password, salt);
 
+          if (req.files) {
+            let fileName = Date.now().toString() + req.files.image.name;
+            const __dirname = dirname(fileURLToPath(import.meta.url));
+            req.files.image.mv(path.join(__dirname, "..", "uploads", fileName));
+
+            const newUser = new User({
+              username,
+              avatar: fileName,
+              password: hash,
+              email,
+              role,
+            });
+
+            const token = jwt.sign(
+              {
+                id: newUser._id,
+              },
+              process.env.JWT_SECRET,
+              { expiresIn: "30d" }
+            );
+
+            const v_token = jwt.sign(
+              {
+                id: newUser._id,
+              },
+              process.env.JWT_SECRET,
+              { expiresIn: "1h" }
+            );
+
+            await newUser.save();
+
+            // verification email
+            await newUser.save();
+            const url = `${process.env.BASE_URL}verify/${v_token}`;
+            mailTransport().sendMail({
+              from: process.env.USER,
+              to: newUser.email,
+              subject: "Verify your email account",
+              html: `<h1>${url}</h1>`,
+            });
+            ////////////////////////////////////////
+
+            res.json({
+              newUser,
+              token,
+              message: "An Email sent to your account please verify",
+            });
+          }
+
           const newUser = new User({
             username,
+            avatar: "",
             password: hash,
             email,
             role,
