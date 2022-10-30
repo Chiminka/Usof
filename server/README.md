@@ -4,7 +4,7 @@ After that, nodemon, express, node, mongoose, mongodb are installed in the serve
 
 For problems with other dependencies, look in the package.json file
 
-After that, you need to create a .evm file and insert text there based on your data.
+After that, you need to create a .env file and insert text there based on your data.
 
 PORT=3002\
 DB_USER = # database username\
