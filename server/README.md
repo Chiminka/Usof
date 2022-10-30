@@ -19,4 +19,4 @@ SERVICE=Gmail\
 EMAIL_PORT = 3002\
 SECURE=true\
 USER = # Google corporate mail, the address from which letters will be sent to users\
-PASS = # generated password from Google (access to mailing letters through the application)\
+PASS = # generated password from Google (access to mailing letters through the application)
