@@ -15,7 +15,7 @@ router.get("/", checkAuth, postController.getAll);
 
 // Get Post By Id +
 // http://localhost:3002/api/posts/:id
-router.get("/:id", postController.getById);
+router.get("/:id", checkAuth, postController.getById);
 
 // Update Post +
 // http://localhost:3002/api/posts/:id
@@ -27,7 +27,7 @@ router.delete("/:id", checkAuth, postController.removePost);
 
 // Get Post Comments +
 // http://localhost:3002/api/posts/:id/comments
-router.get("/:id/comments", postController.getPostComments);
+router.get("/:id/comments", checkAuth, postController.getPostComments);
 
 // Create Post Comment +
 // http://localhost:3002/api/posts/:id/comments

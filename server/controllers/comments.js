@@ -92,7 +92,7 @@ export class CommentController {
         res.json(com);
       } else return res.json("That's not your comment");
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }

@@ -118,18 +118,22 @@ export class PostController {
         }
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }
   // Get Post By Id
   async getById(req, res) {
     try {
-      // если статус активный
+      // если статус активный для пользователя
       const post = await Post.findByIdAndUpdate(req.params.id, {
         $inc: { views: 1 },
       });
-      if (post.status === "active") res.json(post);
+      const id = req.user.id;
+      const user = await User.findById(id);
+      if (user.role === "admin" || req.user._id.equals(post.author)) {
+        res.json(post);
+      } else if (post.status === "active") res.json(post);
       else return res.json({ message: "Post is inactive" });
     } catch (error) {
       res.json({ message: "Something gone wrong" });
@@ -188,13 +192,11 @@ export class PostController {
         res.json(post);
       } else if (user.role === "admin") {
         post.status = status;
-        if (categories.length === 0) {
-          post.categories = null;
-        } else if (categories) post.categories = categories;
         await post.save();
         res.json(post);
       } else res.json("it's not your post");
     } catch (error) {
+      // console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }
@@ -203,11 +205,24 @@ export class PostController {
     try {
       const post = await Post.findById(req.params.id);
       const postId = post.id;
-      const arr = await Comment.find({
-        post: { _id: postId },
-        status: "active",
-      });
-
+      const user = await User.findById(req.user.id);
+      const arr =
+        user.role === "admin"
+          ? await Comment.find({ post: { _id: postId } })
+          : await Comment.find({
+              post: { _id: postId },
+              status: "active",
+            });
+      // if (user.role === "admin") {
+      //   const arr = await Comment.find({
+      //     post: { _id: postId },
+      //   });
+      // } else {
+      //   const arr = await Comment.find({
+      //     post: { _id: postId },
+      //     status: "active",
+      //   });
+      // }
       res.json(arr);
     } catch (error) {
       res.json({ message: "Something gone wrong" });
@@ -320,7 +335,7 @@ export class PostController {
         } else res.json({ message: "It already has like or dislike" });
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }

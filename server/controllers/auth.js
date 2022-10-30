@@ -113,7 +113,7 @@ export class AuthController {
         message: "You are signed in",
       });
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       return res.json({ message: "Autorization error" });
     }
   }

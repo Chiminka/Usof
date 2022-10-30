@@ -15,6 +15,10 @@ router.post("/", checkAuth, userController.createUser);
 // http://localhost:3002/api/users/posts
 router.get("/posts", checkAuth, userController.getMyPosts);
 
+// Get User Posts +
+// http://localhost:3002/api/users/:id/posts
+router.get("/:id/posts", userController.getUserPosts);
+
 // Get all +
 // http://localhost:3002/api/users
 router.get("/", userController.getAll);

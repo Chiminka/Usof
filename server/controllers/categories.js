@@ -62,7 +62,7 @@ export class CategoryController {
         res.json({ message: "Category was deleted" });
       } else return res.json("You're not an admin");
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }

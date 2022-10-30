@@ -8,7 +8,7 @@ import User from "../models/User.js";
 import mailTransport from "../utils/mailTransport.js";
 
 export class UserController {
-  // Get User Posts
+  // Get My Posts
   async getMyPosts(req, res) {
     try {
       const user = await User.findById(req.user.id);
@@ -22,10 +22,23 @@ export class UserController {
       res.json({ message: "Something gone wrong" });
     }
   }
+  // Get User Posts
+  async getUserPosts(req, res) {
+    try {
+      const user = await User.findById(req.params.id);
+      const arr = await Post.find({ author: { _id: user._id } }).sort(
+        "-updatedAt"
+      );
+      res.json(arr);
+    } catch (error) {
+      res.json({ message: "Something gone wrong" });
+    }
+  }
   // Create User
   async createUser(req, res) {
     try {
-      const { username, password, email, repeatPassword, role } = req.body;
+      const { username, password, email, repeatPassword, role, full_name } =
+        req.body;
 
       const user = await User.findById(req.user.id);
 
@@ -48,6 +61,7 @@ export class UserController {
             req.files.image.mv(path.join(__dirname, "..", "uploads", fileName));
 
             const newUser = new User({
+              full_name,
               username,
               avatar: fileName,
               password: hash,
@@ -92,6 +106,7 @@ export class UserController {
           }
 
           const newUser = new User({
+            full_name,
             username,
             avatar: "",
             password: hash,
@@ -136,7 +151,7 @@ export class UserController {
         } else return res.json({ message: "Different passwords" });
       } else res.json("you are not admin");
     } catch (error) {
-      // console.log(error)
+      // console.log(error);
       res.json({ message: "Creating user error" });
     }
   }
@@ -160,7 +175,7 @@ export class UserController {
       const user = await User.findById(req.params.id);
       res.json(user);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }
@@ -190,10 +205,11 @@ export class UserController {
   // Update User
   async updateUser(req, res) {
     try {
-      const { email, username, password, full_name, rating, role } = req.body;
+      const { id, email, username, password, full_name, role, verified } =
+        req.body;
 
       const isadmin = await User.findById(req.user.id);
-      const user = await User.findById(req.params.id);
+      const user = await User.findById(id);
 
       const user_who_try = isadmin._id;
       const UserId = user._id;
@@ -203,13 +219,13 @@ export class UserController {
 
       if (isadmin.role == "admin" || user_who_try.equals(UserId)) {
         if (req.files) {
-          let fileName = Date.now().toString() + req.files.image.name;
+          let fileName = Date.now().toString() + req.files.avatar.name;
           const __dirname = dirname(fileURLToPath(import.meta.url));
-          req.files.image.mv(path.join(__dirname, "..", "uploads", fileName));
+          req.files.avatar.mv(path.join(__dirname, "..", "uploads", fileName));
           user.avatar = fileName || "";
         }
 
-        if (role) user.email = role;
+        if (role) user.role = role;
         if (email) user.email = email;
         if (username) user.username = username;
         if (password) {
@@ -217,15 +233,15 @@ export class UserController {
           const hash = bcrypt.hashSync(password, salt);
           user.password = hash;
         }
+        if (verified) user.verified = verified;
         user.full_name = full_name;
-        user.rating = rating;
 
         await user.save();
 
         res.json(user);
       } else res.json("no access");
     } catch (error) {
-      // console.log(error)
+      // console.log(error);
       res.json({ message: "Something gone wrong" });
     }
   }
