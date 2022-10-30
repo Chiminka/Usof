@@ -45,20 +45,52 @@ export const removeComment = createAsyncThunk(
   }
 );
 
+export const updateComment = createAsyncThunk(
+  "comment/updateComment",
+  async ({ id, comment, stat }) => {
+    try {
+      console.log("stats", id, comment, stat);
+      const status = stat;
+      const { data } = await axios.patch(`comments/${id}`, {
+        id,
+        comment,
+        status,
+      });
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
 export const commentSlice = createSlice({
   name: "comment",
   initialState,
   reducers: {},
   extraReducers: {
-    // Создание comment
-    [createComment.pending]: (state) => {
+    // Обновление коммента
+    [updateComment.pending]: (state) => {
       state.loading = true;
     },
-    [createComment.fulfilled]: (state, action) => {
+    [updateComment.fulfilled]: (state, action) => {
+      state.loading = false;
+      const index = state.comments.findIndex(
+        (comment) => comment._id === action.payload._id
+      );
+      state.comments[index] = action.payload;
+    },
+    [updateComment.rejected]: (state) => {
+      state.loading = false;
+    },
+    // Создание comment
+    [updateComment.pending]: (state) => {
+      state.loading = true;
+    },
+    [updateComment.fulfilled]: (state, action) => {
       state.loading = false;
       state.comments.push(action.payload);
     },
-    [createComment.rejected]: (state) => {
+    [updateComment.rejected]: (state) => {
       state.loading = false;
     },
     // Получение комментов

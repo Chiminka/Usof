@@ -17,6 +17,9 @@ import { VerificationPage } from "./pages/VerificationPage";
 import { VerifiedEmail } from "./pages/VerifiedEmail";
 import { CategoriesPage } from "./pages/CategoriesPage";
 import { CategoryPage } from "./pages/CategoryPage";
+import { UserPage } from "./pages/UserPage";
+import { UsersPage } from "./pages/UsersPage";
+import { CreateUserPage } from "./pages/CreateUserPage";
 
 import "react-toastify/dist/ReactToastify.css";
 
@@ -43,6 +46,9 @@ function App() {
         <Route path="verify/:token" element={<VerifiedEmail />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="categories/:id" element={<CategoryPage />} />
+        <Route path="users_all" element={<UsersPage />} />
+        <Route path="users/:id" element={<UserPage />} />
+        <Route path="create_users" element={<CreateUserPage />} />
       </Routes>
 
       <ToastContainer position="bottom-right" />

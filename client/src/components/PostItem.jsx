@@ -42,7 +42,7 @@ export const PostItem = ({ post }) => {
     if (!post) {
         return (
             <div className='text-xl text-center text-white py-10'>
-                Downloading...
+                Loading...
             </div>
         )
     }
@@ -61,7 +61,7 @@ export const PostItem = ({ post }) => {
 
     return (
         <Link to={`/posts/${post._id}`}>
-            <div className='flex flex-col basis-1/4 flex-grow mt-10'>
+            <div className='flex flex-col basis-1/4 flex-grow mt-5'>
                 <div className='flex justify-between items-center pt-2 text-sm text-white opacity-19'>
                       {author()}
                     <div className='text-xs text-white opacity-50'>
@@ -88,7 +88,7 @@ export const PostItem = ({ post }) => {
                         <AiFillLike />{' '}
                         <span>{post.likes || 0} </span>
                     </button>
-                    <span>{categories.map((category) => (
+                    <span className='inline-flex'>{categories?.map((category) => (
                             <CategoryItem key={category._id} category={category} />
                         ))}
                     </span>

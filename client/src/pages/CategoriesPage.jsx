@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { createCategory} from '../redux/features/category/categorySlice'
 import { toast } from 'react-toastify'
 import { Grid } from '@mui/material';
-import Paper from '@mui/material/Paper';
 
 export const CategoriesPage = () => {
     const [title, setTitle] = useState('')
@@ -33,8 +32,8 @@ export const CategoriesPage = () => {
             formData.append('title', title)
             formData.append('description', text)
             dispatch(createCategory(formData))
-            toast('Category is created')
             window.location.reload()
+            toast('Category is created')
         } catch (error) {
             console.log(error)
         }

@@ -34,7 +34,6 @@ export const RegisterPage = () => {
                 setUsername('')
                 setRepeatPassword('')
             } else {
-                console.log(username, password, email, repeatPassword)
                 setPassword('')
                 setEmail('')
                 setUsername('')
@@ -52,7 +51,7 @@ export const RegisterPage = () => {
         >
             <h1 className='text-lg text-white text-center'>Registration</h1>
             <label className='text-xs text-gray-400'>
-                Username:
+                *Username:
                 <input
                     type='text'
                     value={username}
@@ -63,7 +62,7 @@ export const RegisterPage = () => {
             </label>
 
             <label className='text-xs text-gray-400'>
-                Password:
+                *Password:
                 <input
                     type='password'
                     value={password}
@@ -74,7 +73,7 @@ export const RegisterPage = () => {
             </label>
 
             <label className='text-xs text-gray-400'>
-                Repeat password:
+                *Repeat password:
                 <input
                     type='password'
                     value = {repeatPassword}
@@ -85,12 +84,12 @@ export const RegisterPage = () => {
             </label>
 
             <label className='text-xs text-gray-400'>
-                Email:
+                *Email:
                 <input
                     type='email'
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder='Email'
+                    placeholder='michel@gmail.com'
                     className='mt-1 text-black w-full rounded-lg bg-gray-400 border py-3 px-2 text-xs outline-none placeholder:text-gray-700'
                 />
             </label>

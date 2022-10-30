@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../../utils/axios";
 
 const initialState = {
+  userID: localStorage.getItem("userId"),
   user: null,
   token: null,
   isLoading: false,
@@ -55,7 +56,6 @@ export const loginUser = createAsyncThunk(
       if (data.token) {
         window.localStorage.setItem("token", data.token);
       }
-      console.log(data);
       return data;
     } catch (error) {
       console.log(error);
@@ -66,6 +66,7 @@ export const loginUser = createAsyncThunk(
 export const getMe = createAsyncThunk("auth/getMe", async () => {
   try {
     const { data } = await axios.get("/auth/me");
+    localStorage.setItem("userId", data.user._id);
     return data;
   } catch (error) {
     console.log(error);
@@ -161,6 +162,7 @@ export const authSlice = createSlice({
       state.status = null;
       state.user = action.payload?.user;
       state.token = action.payload?.token;
+      state.userID = localStorage.getItem("userId");
     },
     [getMe.rejectWithValue]: (state, action) => {
       state.status = action.payload.message;

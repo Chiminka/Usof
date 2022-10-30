@@ -7,19 +7,21 @@ import {
     AiFillEye,
     AiTwotoneEdit,
     AiFillDelete,
-    AiFillLike
+    AiFillLike,
+    AiOutlineMinusCircle
 } from 'react-icons/ai'
 import Moment from 'react-moment'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import axios from '../utils/axios'
-import { removePost, createLike_Dislike, deleteLike_Dislike} from '../redux/features/post/postSlice'
-import {getPostCategories} from '../redux/features/category/categorySlice'
+import { removePost, createLike_Dislike, deleteLike_Dislike } from '../redux/features/post/postSlice'
+import { getPostCategories } from '../redux/features/category/categorySlice'
 import {
     createComment,
     getPostComments
 } from '../redux/features/comment/commentSlice'
 import { CommentItem } from '../components/CommentItem'
+import { updatePost } from '../redux/features/post/postSlice'
 import { CategoryItem } from '../components/CategoryItem'
 import '../like_dislike.css'
 
@@ -28,15 +30,34 @@ export const PostPage = () => {
     const [comment, setComment] = useState('')
     let [type, setLike] = useState('')
     const [users, setUser] = useState([])
+    const { userID } = useSelector((state) => state.auth)
     const { user } = useSelector((state) => state.auth)
-    const { categories} = useSelector((state) => state.category)
-    const { comments} = useSelector((state) => state.comment)
+    const { categories } = useSelector((state) => state.category)
+    const { comments } = useSelector((state) => state.comment)
     const [checked, setChecked] = useState(false)
     const [checkedDislike, setCheckedDislike] = useState(false)
+    const [status, setStatus] = useState('')
 
     const navigate = useNavigate()
     const params = useParams()
     const dispatch = useDispatch()
+
+
+    const submitHandler = () => {
+        try {
+            const id = params.id
+            let formData = new FormData()
+            formData.append('id', id)
+            if (post.status === 'active')
+                formData.append('status', 'inactive')
+            if (post.status === 'inactive')
+                formData.append('status', 'active')
+            dispatch(updatePost(formData))
+            navigate('/main')
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     const removePostHandler = () => {
         try {
@@ -72,7 +93,7 @@ export const PostPage = () => {
     }, [params.id, dispatch])
 
 
-     const fetchCategories = useCallback(async () => {
+    const fetchCategories = useCallback(async () => {
         try {
             dispatch(getPostCategories(params.id))
         } catch (error) {
@@ -86,9 +107,22 @@ export const PostPage = () => {
         setPost(data)
     }, [params.id])
 
+    const fetchLikes = async () => {
+        const { data } = await axios.get(`/posts/${params.id}/like`)
+        checkLike(data)
+    }
+
     
+    function onLoad (){
+        if(!window.location.hash){
+            // window.location=window.location+'#loaded'
+            fetchLikes()
+        }
+    }
+
     useEffect(() => {
         fetchAllUser()
+        onLoad()
     }, [fetchAllUser])
 
     useEffect(() => {
@@ -104,51 +138,38 @@ export const PostPage = () => {
     }, [fetchCategories])
 
     const checkLike = (data) => {
-        console.log(data)
         const authorr = []
         let types = ''
-        data?.map((like, index) => { 
-            authorr.push(like.author) 
+        data?.map((like) => {
+            authorr.push(like.author)
             types = like.type
             return true
         })
-        for (let i = 0; i<authorr.length; i++){
-            if(data.length > 0 && types === 'like' && authorr[i] === user?._id) {
+        for (let i = 0; i < authorr.length; i++) {
+            if (data.length > 0 && types === 'like' && authorr[i] === userID) {
                 setChecked(!checked)
-                setLike('islike')  
-            } else if(data.length > 0 && types === 'dislike' && authorr[i] === user?._id) {
-            setCheckedDislike(!checked)
-            setLike('islike')  
-        }
-        }
-    }
-
-
-
-    const fetchLikes = async () => {
-        const { data } = await axios.get(`/posts/${params.id}/like`)
-        console.log('data',data)
-        checkLike(data)
-    }
-
-    function onLoad (){
-         if(!window.location.hash){
-            window.location=window.location+'#loaded'
-            fetchLikes()
+                setLike('islike')
+            } else if (data.length > 0 && types === 'dislike' && authorr[i] === userID) {
+                setCheckedDislike(!checked)
+                setLike('islike')
+            }
         }
     }
+
 
     const likeHandler = () => {
         try {
             const postId = params.id
-            if (type !== 'islike'){
-                 if (type === 'like' || type === 'dislike') {
+            if (type !== 'islike') {
+                if (type === 'like' || type === 'dislike') {
                     dispatch(createLike_Dislike({ postId, type }))
-                    // window.location.reload()
-                 }
+                    window.location.reload()
+                    return 
+                }
                 else if (type === 'deletelike' || type === 'deletedislike') {
-                        dispatch(deleteLike_Dislike({ postId }))
-                        // window.location.reload()
+                    dispatch(deleteLike_Dislike({ postId }))
+                    window.location.reload()
+                    return 
                 }
             }
         } catch (error) {
@@ -160,25 +181,38 @@ export const PostPage = () => {
     if (!post || !user) {
         return (
             <div className='text-xl text-center text-white py-10'>
-                Downloading...
+                Loading...
             </div>
         )
-    } 
+    }
 
     const author = () => {
         const userArr = []
-        users.users?.map((author, idx)=>{
-           return userArr.push(author)
+        users.users?.map((author, idx) => {
+            return userArr.push(author)
         })
-        for ( let i = 0; i<userArr.length; i++){
+        for (let i = 0; i < userArr.length; i++) {
             if (post.author === userArr[i]._id) {
                 return userArr[i].username
             }
         }
     }
 
+    const admin = () => {
+        if (user?.role === 'admin') {
+            return(
+                <div className='flex gap-3 mt-4'>
+                    <button className='flex items-center justify-center gap-2 text-white opacity-50 pr-4' onClick={submitHandler}>
+                        <AiOutlineMinusCircle/>
+                    </button>
+                </div>
+            )
+        }
+    }
+
+
     return (
-        <div onLoad={onLoad()}>
+        <div>
             <button className='flex justify-center items-center bg-gray-600 text-xs text-white rounded-sm py-2 px-4'>
                 <Link className='flex' to={'/'}>
                     Back
@@ -186,12 +220,12 @@ export const PostPage = () => {
             </button>
 
             <div className='flex gap-10 py-8'>
-                <div className='w-2/3'>
+                <div className='w-full'>
                     <div className='flex flex-col basis-1/4 flex-grow'>
                         <div
                             className={
                                 post?.imgUrl
-                                    ? 'flex rouded-sm h-80'
+                                    ? 'flex rounded-sm h-2/4 w-2/4'
                                     : 'flex rounded-sm'
                             }
                         >
@@ -213,7 +247,11 @@ export const PostPage = () => {
                             <Moment date={post.createdAt} format='D MMM YYYY' />
                         </div>
                     </div>
-                    <div className='text-white text-xl'>{post.title}</div>
+                    <div className='flex justify-between items-center pt-2'>
+                         <div className='text-white text-xl'>{post.title}</div>
+                         <div className='text-xs text-white opacity-50'>{post.status}</div>
+                    </div>
+                    
                     <p className='text-white opacity-60 text-xs pt-4'>
                         {post.text}
                     </p>
@@ -229,43 +267,45 @@ export const PostPage = () => {
                             </button>
                         </div>
 
-                        <div>
+                        <div className='inline-flex'>
                             {categories?.map((category) => (
                                 <CategoryItem key={category._id} category={category} />
                             ))}
-                        </div>
+                        </div> 
+                        <div className='inline-flex'>
+                                {admin()}
                         {user?._id === post.author && (
-                            <div className='flex gap-3 mt-4'>
-                                <button className='flex items-center justify-center gap-2 text-white opacity-50'>
-                                    <Link to={`/${params.id}/edit`}>
-                                        <AiTwotoneEdit />
-                                    </Link>
-                                </button>
-                                <button
-                                    onClick={removePostHandler}
-                                    className='flex items-center justify-center gap-2  text-white opacity-50'
-                                >
-                                    <AiFillDelete />
-                                </button>
-                            </div>
-                        )}
+                                <div className='flex gap-3 mt-4'>
+                                    <button className='flex items-center justify-center gap-2 text-white opacity-50'>
+                                        <Link to={`/${params.id}/edit`}>
+                                            <AiTwotoneEdit />
+                                        </Link>
+                                    </button>
+                                    <button
+                                        onClick={removePostHandler}
+                                        className='pl-2 flex items-center justify-center gap-2  text-white opacity-50'
+                                    >
+                                        <AiFillDelete />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div className='inline-flex items-center justify-center gap-2  text-white opacity-50 mt-4 pr-4'>
+                    <div className='inline-flex text-white opacity-50 mt-4'>
                         <div className="container">
                             <ul className="ks-cboxtags">
-                                <li>
+                                <li className='pr-4'>
                                     <input
                                         id={1}
                                         type='checkbox'
                                         checked={checked}
-                                        onChange={function(){
+                                        onChange={function () {
                                             setChecked(!checked)
                                             setCheckedDislike(false)
-                                            if(!checked) {
-                                                setLike('like')       
+                                            if (!checked) {
+                                                setLike('like')
                                             } else if (checked)
-                                                setLike('deletelike')   
-                                            console.log(type)
+                                                setLike('deletelike')
                                         }}
                                         className='like'
                                     /><label className='like' htmlFor={1}>like</label>
@@ -275,14 +315,14 @@ export const PostPage = () => {
                                         id={2}
                                         type='checkbox'
                                         checked={checkedDislike}
-                                        onChange={function(){
+                                        onChange={function () {
                                             setCheckedDislike(!checkedDislike)
                                             setChecked(false)
-                                            if(!checkedDislike) {
-                                                setLike('dislike')       
+                                            if (!checkedDislike) {
+                                                setLike('dislike')
                                             } else if (checkedDislike)
-                                                setLike('deletedislike')   
-                                            }}
+                                                setLike('deletedislike')
+                                        }}
                                         className='dislike'
                                     />
                                     <label className='dislike' htmlFor={2}>dislike</label>
@@ -291,8 +331,7 @@ export const PostPage = () => {
                         </div>
                         {likeHandler()}
                     </div>
-                </div>
-                <div className='w-1/3 p-8 bg-gray-700 flex flex-col gap-2 rounded-sm'>
+                    <div className='w-full p-8 bg-gray-700 flex flex-col gap-2 rounded-sm'>
                     <form
                         className='flex gap-2'
                         onSubmit={(e) => e.preventDefault()}
@@ -313,10 +352,11 @@ export const PostPage = () => {
                         </button>
                     </form>
                     <div>
-                    {comments?.map((cmt) => (
-                                <CommentItem key={cmt._id} cmt={cmt} />
-                            ))}
+                        {comments?.map((cmt) => (
+                            <CommentItem key={cmt._id} cmt={cmt} />
+                        ))}
                     </div>
+                </div>
                 </div>
             </div>
         </div>

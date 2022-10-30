@@ -18,8 +18,11 @@ export const MainPage = () => {
     const [postsPerPage] = useState(5)
     const { user } = useSelector((state) => state.auth)
     const [search, setSearch] = useState([])
+    const [search_ex, setSearch_ex] = useState([])
     const [new_posts, setNew_posts] = useState([])
     const [filting] = useState([])
+    const [filt_post2] = useState([])
+    let [flag] = useState(0)
 
     useEffect(() => {
         dispatch(getAllPosts())
@@ -51,61 +54,105 @@ export const MainPage = () => {
         )
     }
 
-    let filteredPosts = []
+
     // Search and Filter
-    filteredPosts =  posts.filter(post =>{
-            try { 
-                if(search.length > 1 && search !== 'likes' && search !== 'date' && search !== 'active' && search !== 'inactive')
-                    for (let i = 0; i<search.length; i++) {
-                        if(post.title.toLowerCase().includes(search[i].toLocaleLowerCase())){
-                            filting.push(post)
-                            return post.title.toLowerCase().includes(search[i].toLocaleLowerCase())
+    posts.filter(post =>{
+            try {
+                if (search !== 'active' && search !== 'inactive') {
+                    const app = search?.map((date)=>{
+                        if (date.createdAt) {
+                            return date
+                        }  else return null
+                    })
+                    if( app[0] !== null && search !== 'likes' && search !== 'date' && search !== 'active' && search !== 'inactive') {
+                        const filt_post = []
+                        for(let j = 0; j<filting.length; j++){
+                            for (let i = 0; i<search.length; i++) {
+                                if (filting[j].title.toLowerCase().includes(search[i].title.toLocaleLowerCase())){
+                                    filt_post.push(filting[j])
+                                }
+                            }
+                        }
+                        filting.length = 0
+                        for (let i = 0; i<filt_post.length; i++)
+                            filting.push(filt_post[i])
+                    } 
+                    else 
+                    if (search.length > 1 && search !== 'likes' && search !== 'date' && search !== 'active' && search !== 'inactive') {
+                        for (let i = 0; i<search.length; i++) {
+                            if( post.title.toLowerCase().includes(search[i].toLocaleLowerCase())){
+                                filting.push(post)
+                            }
                         }
                     }
+                }    
                 if (!/[0-9]/i.test(search) && search !== 'likes' && search !== 'date') {
-                    if(post.title.toLowerCase().includes(search.toLocaleLowerCase())){
-                        filting.push(post)
-                        return post.title.toLowerCase().includes(search.toLocaleLowerCase())
+                    if (search.length > 0){
+                        if (filting.length > 0) {
+                            const filt_post = []
+                            for (let i = 0; i<filting.length; i++) {
+                                if(filting[i].status.toLowerCase() === (search.toLocaleLowerCase())) {
+                                    filt_post.push(filting[i])
+                                }
+                            }
+                            filting.length = 0
+                            for (let i = 0; i<filt_post.length; i++)
+                                filting.push(filt_post[i])
+                        } else if (filting.length === 0) {
+                            if(post.status.toLowerCase() === (search.toLocaleLowerCase())) {
+                                filt_post2.push(post)
+                            }
+                        }
                     }
-                    if(post.status.toLowerCase() === (search.toLocaleLowerCase())  && search !== 'likes' && search !== 'date') {
-                        filting.push(post)
-                        return post
-                    }
-                }
+                }  
+
                 if (/[a-za-яё0-9]/i.test(search) && search !== 'likes' && search !== 'date') {
                     for(let i = 0; i<search.length; i++){
                         if (post.categories.includes(search[i])) {
                             filting.push(post)
-                            return post.categories.includes(search[i])
                         }
                     }
                 }
             } catch (error) {
-                return posts
             }
      })
+
+    for (let i = 0; i<filt_post2.length; i++)
+        filting.push(filt_post2[i])
+
+    posts.filter(post =>{
+        if (search_ex.length > 0){
+            if(post.text.toLowerCase().includes(search_ex.toLocaleLowerCase()) || post.title.toLowerCase().includes(search_ex.toLocaleLowerCase())){
+                flag = 1
+                filting.push(post)
+            } 
+        }
+    })
 
     const makeUniq = (arr) => {
         const uniqSet = new Set(arr);
         return [...uniqSet];
     }
 
-    console.log('filting', filting)
+
     let new_filted_posts = makeUniq(filting)
+    
+    // if (flag === 1)
+    //     filting.length = 0
+    
 
     const removePostHandler = () => {
         window.location.reload(true)
     }
-    // console.log(new_posts)
 
     // Sort
     if (search === 'likes') {
         const numDescending = new_filted_posts.length > 0 ? [...new_filted_posts].sort((a, b) => b.likes - a.likes) : [...posts].sort((a, b) => b.likes - a.likes)
         new_filted_posts = numDescending
     } else if (search === 'date') {
-        new_filted_posts = posts
+       const numDescending = new_filted_posts.length > 0 ? [...new_filted_posts].sort((a, b) => new Date(b.createdAt).setHours(0, 0, 0, 0) - new Date(a.createdAt).setHours(0, 0, 0, 0)) : [...posts].sort((a, b) => new Date(b.createdAt).setHours(0, 0, 0, 0) - new Date(a.createdAt).setHours(0, 0, 0, 0))
+        new_filted_posts = numDescending
     } 
-
 
 
     const Status = ()=>{
@@ -163,7 +210,26 @@ export const MainPage = () => {
         const mas = []
         posts?.map((time, index) => {  
             const date = new Date(Date.parse(time.createdAt))
-            switch (number) {
+            if (filting.length > 0) {
+                switch (number) {
+                case '3':{
+                    if (date.getFullYear() === year)
+                        mas.push(time)
+                    break;
+                }
+                case '4':{
+                    if (date.getMonth()+1 === month)
+                        mas.push(time)
+                     break;
+                }
+                case '5':{
+                    if (date.getDate() > week)
+                        mas.push(time)
+                        break;
+                    }
+                }
+            } else {
+                switch (number) {
                 case '3':{
                     if (date.getFullYear() === year)
                         mas.push(time.title)
@@ -177,10 +243,12 @@ export const MainPage = () => {
                 case '5':{
                     if (date.getDate() > week)
                         mas.push(time.title)
-                     break;
+                        break;
+                    }
                 }
             }
-            if (mas.length <= 1)
+            
+             if (mas.length <= 1)
                 setSearch(mas.toString())
             setSearch(mas)
         })
@@ -199,7 +267,7 @@ export const MainPage = () => {
         <div id="abc" onLoad={onLoad} className='max-w-[900px] mx-auto py-10'>
             <div>
                 <input  className='mb-5 text-black w-full rounded-lg bg-gray-400 border py-1 px-2 text-xs outline-none placeholder:text-gray-700'
-                    onChange={(e)=>setSearch(e.target.value)} placeholder='Search...'/>
+                    onChange={(e)=>setSearch_ex(e.target.value)} placeholder='Search...'/>
             </div>
             <div className='flex justify-between gap-8'>
                 <div className='basis-1/5'>

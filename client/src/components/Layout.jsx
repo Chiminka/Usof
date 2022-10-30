@@ -5,8 +5,8 @@ import {LeftBar} from './LeftBar'
 export const Layout = ({ children }) => {
     return (
         <React.Fragment>
-            <div className='flex'>
-            <div className='container mx-auto'>
+            <div>
+            <div className='mx-20'>
                 <Navbar />
                 {children}
             </div>

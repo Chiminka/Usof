@@ -70,6 +70,7 @@ export const EditPostPage = () => {
 
             dispatch(updatePost(formData))
             navigate('/main')
+            window.location.reload()
         } catch (error) {
             console.log(error)
         }

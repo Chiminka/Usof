@@ -75,8 +75,8 @@ export const CategoryPage = () => {
             ))}
             const id = params.id
             dispatch(removeCategory({id, post_id}))
-            toast('Post was deleted')
             navigate('/categories')
+            toast('Category deleted')
         } catch (error) {
             console.log(error)
         }
@@ -85,7 +85,7 @@ export const CategoryPage = () => {
     if (!categories || !posts) {
         return (
             <div className='text-xl text-center text-white py-10'>
-                Downloading...
+                Loading...
             </div>
         )
     }
@@ -96,46 +96,46 @@ export const CategoryPage = () => {
         else if (user.role === 'admin') {
             return(
                 <div className='flex gap-3 mt-4'>
-                <button className='flex items-center justify-center gap-2 text-white opacity-50'>
-                    <button onClick={()=>setModalActive(true)}>
-                        <AiTwotoneEdit />
+                    <button className='flex items-center justify-center gap-2 text-white opacity-50'>
+                        <button onClick={()=>setModalActive(true)}>
+                            <AiTwotoneEdit />
+                        </button>
                     </button>
-                </button>
-                <button
-                    onClick={removePostHandler}
-                    className='flex items-center justify-center gap-2  text-white opacity-50'
-                >
-                    <AiFillDelete />
-                </button>
-                <Modal active={modalActive} setActive={setModalActive}>
-                     <label className='text-xs text-white opacity-70'>
-                Title of category:
-                <input
-                    type='text'
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder='Title'
-                    className='mt-1 text-black w-full rounded-lg bg-gray-400 border py-1 px-2 text-xs outline-none placeholder:text-gray-700'
-                />
-            </label>
-            <label className='text-xs text-white opacity-70'>
-                Text of category:
-                <textarea
-                    onChange={(e) => setDescription(e.target.value)}
-                    value={description}
-                    placeholder='Text'
-                    className='mt-1 text-black w-full rounded-lg bg-gray-400 border py-1 px-2 text-xs outline-none resize-none h-40 placeholder:text-gray-700'
-                />
-            </label>
-            <div>
-                <button
-                    onClick={submitHandler}
-                    className='flex justify-center items-center bg-gray-600 text-xs text-white rounded-sm py-2 px-4'
-                >
-                    Update
-                </button>
-            </div>
-                </Modal>
+                    <button
+                        onClick={removePostHandler}
+                        className='flex items-center justify-center gap-2  text-white opacity-50'
+                    >
+                        <AiFillDelete />
+                    </button>
+                    <Modal active={modalActive} setActive={setModalActive}>
+                        <label className='text-xs text-white opacity-70'>
+                            Title of category:
+                            <input
+                                type='text'
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder='Title'
+                                className='mt-1 text-black w-full rounded-lg bg-gray-400 border py-1 px-2 text-xs outline-none placeholder:text-gray-700'
+                            />
+                        </label>
+                        <label className='text-xs text-white opacity-70'>
+                            Text of category:
+                            <textarea
+                                onChange={(e) => setDescription(e.target.value)}
+                                value={description}
+                                placeholder='Text'
+                                className='mt-1 text-black w-full rounded-lg bg-gray-400 border py-1 px-2 text-xs outline-none resize-none h-40 placeholder:text-gray-700'
+                            />
+                        </label>
+                        <div>
+                            <button
+                                onClick={submitHandler}
+                                className='flex justify-center items-center bg-gray-600 text-xs text-white rounded-sm py-2 px-4'
+                            >
+                                Update
+                            </button>
+                        </div>
+                    </Modal>
                 </div>
             )
         }

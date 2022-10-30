@@ -8,7 +8,6 @@ instance.interceptors.request.use((config) => {
   config.headers.Authorization = "JWT ";
   config.headers.Authorization += window.localStorage.getItem("token");
 
-  console.log(config);
   return config;
 });
 

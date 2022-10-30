@@ -29,7 +29,6 @@ export const createLike_Dislike = createAsyncThunk(
         postId,
         type,
       });
-      console.log({ postId, type });
       return data;
     } catch (error) {
       console.log(error);
@@ -54,7 +53,6 @@ export const deleteLike_Dislike = createAsyncThunk(
   async ({ postId }) => {
     try {
       const { data } = await axios.delete(`/posts/${postId}/like`, postId);
-      console.log(data);
       return data;
     } catch (error) {
       console.log(error);

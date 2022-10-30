@@ -74,12 +74,10 @@ export const updateCategory = createAsyncThunk(
   "category/updateCategory",
   async ({ id, title, description }) => {
     try {
-      console.log({ id, title, description });
       const { data } = await axios.patch(`/categories/${id}`, {
         title,
         description,
       });
-      console.log(data);
       return data;
     } catch (error) {
       console.log(error);
@@ -92,7 +90,7 @@ export const categorySlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: {
-    // Обновление поста
+    // Обновление категории
     [updateCategory.pending]: (state) => {
       state.loading = true;
     },
