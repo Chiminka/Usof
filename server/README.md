@@ -6,27 +6,17 @@ For problems with other dependencies, look in the package.json file
 
 After that, you need to create a .evm file and insert text there based on your data.
 
-PORT=3002
-
-DB_USER = # database username
-
-DB_PASSWORD = # database password
-
-DB_NAME = # database name
-
+PORT=3002\
+DB_USER = # database username\
+DB_PASSWORD = # database password\
+DB_NAME = # database name\
 JWT_SECRET = jdncjkehjiofj348uf3489fh3udj39409fj398fh39d3hf398
 
 
-BASE_URL = http://localhost:3000/
-
-HOST=smtp.gmail.com
-
-SERVICE=Gmail
-
-EMAIL_PORT = 3002
-
-SECURE=true
-
-USER = # Google corporate mail, the address from which letters will be sent to users
-
-PASS = # generated password from Google (access to mailing letters through the application)
+BASE_URL = http://localhost:3000/\
+HOST=smtp.gmail.com\
+SERVICE=Gmail\
+EMAIL_PORT = 3002\
+SECURE=true\
+USER = # Google corporate mail, the address from which letters will be sent to users\
+PASS = # generated password from Google (access to mailing letters through the application)\
