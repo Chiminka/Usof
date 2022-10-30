@@ -13,7 +13,7 @@ DB_NAME = # database name\
 JWT_SECRET = jdncjkehjiofj348uf3489fh3udj39409fj398fh39d3hf398
 
 
-BASE_URL = http://localhost:3000/\
+BASE_URL = http://localhost:3000/ \
 HOST=smtp.gmail.com\
 SERVICE=Gmail\
 EMAIL_PORT = 3002\
