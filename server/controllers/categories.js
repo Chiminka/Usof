@@ -10,11 +10,22 @@ export class CategoryController {
       const user = await User.findById(req.user.id);
       if (user.role === "admin") {
         const { title, description } = req.body;
+        const isUsed = await Category.findOne({ title });
+
+        if (isUsed) {
+          return res.json({
+            message: "This category already created",
+          });
+        }
+
         const newCategory = new Category({
           title,
           description,
         });
         await newCategory.save();
+        res.json({
+          message: "Category created",
+        });
         res.json(newCategory);
       } else return res.json("You're not an admin");
     } catch (error) {
