@@ -4,6 +4,7 @@ import axios from "../../../utils/axios";
 const initialState = {
   categories: [],
   loading: false,
+  status: null,
 };
 
 export const getPostCategories = createAsyncThunk(
@@ -120,12 +121,15 @@ export const categorySlice = createSlice({
     // Создание категории
     [createCategory.pending]: (state) => {
       state.loading = true;
+      state.status = null;
     },
     [createCategory.fulfilled]: (state, action) => {
       state.loading = false;
+      state.status = action.payload.message;
       state.categories.push(action.payload);
     },
-    [createCategory.rejected]: (state) => {
+    [createCategory.rejected]: (state, action) => {
+      state.status = action.payload.message;
       state.loading = false;
     },
     // Получаение всех категорий

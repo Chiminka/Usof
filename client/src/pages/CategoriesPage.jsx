@@ -15,6 +15,7 @@ export const CategoriesPage = () => {
     const [categories, setCategory] = useState([])
     const categoryArr = categories.categories
     const { user } = useSelector((state) => state.auth)
+    const { status } = useSelector((state) => state.category)
     
 
     const dispatch = useDispatch()
@@ -26,14 +27,18 @@ export const CategoriesPage = () => {
         }
     }
 
+    useEffect(() => {
+        if (status) {
+            toast(status)
+        }
+    }, [status])
+
     const submitHandler = () => {
         try {
             let formData = new FormData()
             formData.append('title', title)
             formData.append('description', text)
             dispatch(createCategory(formData))
-            window.location.reload()
-            toast('Category is created')
         } catch (error) {
             console.log(error)
         }
