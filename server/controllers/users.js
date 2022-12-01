@@ -1,281 +1,141 @@
-import Post from "../models/Post.js";
-import Like from "../models/Like.js";
+import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import path, { dirname } from "path";
-import { fileURLToPath } from "url";
-import User from "../models/User.js";
 import mailTransport from "../utils/mailTransport.js";
+import Calendar from "../models/Calendar.js";
 
 export class UserController {
-  // Get My Posts
-  async getMyPosts(req, res) {
+  async getMyCalendars(req, res) {
     try {
+      // получить все календари, где ты автор
       const user = await User.findById(req.user.id);
       const userId = user.id;
 
-      const arr = await Post.find({ author: { _id: userId } }).sort(
-        "-updatedAt"
-      );
-      res.json(arr);
+      const calendar = await Calendar.find({ author: { _id: userId } });
+      res.json(calendar);
     } catch (error) {
-      res.json({ message: "Something gone wrong" });
+      res.json({ message: "Getting user error" });
     }
   }
-  // Get User Posts
-  async getUserPosts(req, res) {
+  async inviteFriends(req, res) {
     try {
-      const user = await User.findById(req.params.id);
-      const arr = await Post.find({ author: { _id: user._id } }).sort(
-        "-updatedAt"
-      );
-      res.json(arr);
+      const { email, id_calendar } = req.body;
+
+      const new_member = await User.findOne({ email: email });
+      if (!new_member)
+        return res.json({
+          success: false,
+          message: "Sorry, user not founded!",
+        });
+
+      // verification email
+      const url = `${process.env.BASE_URL}calendars/${id_calendar}`;
+      mailTransport().sendMail({
+        from: process.env.USER,
+        to: email,
+        subject: `Tou have been invited to the calendar by ${req.user.username}. To grant access, follow the link or ignore this message.`,
+        html: `<h1>${url}</h1>`,
+      });
+      ////////////////////////////////////////
+      res.json({
+        message: "An Email was sent to your friend",
+      });
     } catch (error) {
-      res.json({ message: "Something gone wrong" });
+      res.json({ message: "Inviting error" });
     }
   }
-  // Create User
-  async createUser(req, res) {
+  async GetMembers(req, res) {
     try {
-      const { username, password, email, repeatPassword, role, full_name } =
-        req.body;
-
-      const user = await User.findById(req.user.id);
-
-      if (user.role == "admin") {
-        if (password === repeatPassword) {
-          const isUsed = await User.findOne({ username });
-
-          if (isUsed) {
-            return res.json({
-              message: "This username already is taken",
-            });
-          }
-
-          const salt = bcrypt.genSaltSync(10);
-          const hash = bcrypt.hashSync(password, salt);
-
-          if (req.files) {
-            let fileName = Date.now().toString() + req.files.image.name;
-            const __dirname = dirname(fileURLToPath(import.meta.url));
-            req.files.image.mv(path.join(__dirname, "..", "uploads", fileName));
-
-            const newUser = new User({
-              full_name,
-              username,
-              avatar: fileName,
-              password: hash,
-              email,
-              role,
-            });
-
-            const token = jwt.sign(
-              {
-                id: newUser._id,
-              },
-              process.env.JWT_SECRET,
-              { expiresIn: "30d" }
-            );
-
-            const v_token = jwt.sign(
-              {
-                id: newUser._id,
-              },
-              process.env.JWT_SECRET,
-              { expiresIn: "1h" }
-            );
-
-            await newUser.save();
-
-            // verification email
-            await newUser.save();
-            const url = `${process.env.BASE_URL}verify/${v_token}`;
-            mailTransport().sendMail({
-              from: process.env.USER,
-              to: newUser.email,
-              subject: "Verify your email account",
-              html: `<h1>${url}</h1>`,
-            });
-            ////////////////////////////////////////
-
-            res.json({
-              newUser,
-              token,
-              message: "An Email sent to your account please verify",
-            });
-          }
-
-          const newUser = new User({
-            full_name,
-            username,
-            avatar: "",
-            password: hash,
-            email,
-            role,
-          });
-
-          const token = jwt.sign(
-            {
-              id: newUser._id,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: "30d" }
-          );
-
-          const v_token = jwt.sign(
-            {
-              id: newUser._id,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
-          );
-
-          await newUser.save();
-
-          // verification email
-          await newUser.save();
-          const url = `${process.env.BASE_URL}verify/${v_token}`;
-          mailTransport().sendMail({
-            from: process.env.USER,
-            to: newUser.email,
-            subject: "Verify your email account",
-            html: `<h1>${url}</h1>`,
-          });
-          ////////////////////////////////////////
-
-          res.json({
-            newUser,
-            token,
-            message: "An Email sent to your account please verify",
-          });
-        } else return res.json({ message: "Different passwords" });
-      } else res.json("you are not admin");
-    } catch (error) {
-      // console.log(error);
-      res.json({ message: "Creating user error" });
-    }
-  }
-  // Get All Users
-  async getAll(req, res) {
-    try {
-      const users = await User.find().sort("-createdAt");
-
-      if (!users) {
-        return res.json({ message: "None users" });
+      const calendar = await Calendar.findById({ _id: req.params.id });
+      const user = [];
+      for (let i = 0; i < calendar.members.length; i++) {
+        user[i] = await User.findById({ _id: calendar.members[i] });
       }
-
-      res.json({ users });
-    } catch (error) {
-      res.json({ message: "Something gone wrong" });
-    }
-  }
-  // Get Users By Id
-  async getById(req, res) {
-    try {
-      const user = await User.findById(req.params.id);
       res.json(user);
     } catch (error) {
-      // console.log(error);
-      res.json({ message: "Something gone wrong" });
+      console.log(error);
+      res.json({ message: "Getting members error" });
     }
   }
-  // Remove User
-  async removeUser(req, res) {
+  async deleteUser(req, res) {
     try {
-      const isadmin = await User.findById(req.user.id);
       const user = await User.findById(req.params.id);
-
-      const user_who_try = isadmin._id;
-      const UserId = user._id;
-
-      if (isadmin.role == "admin") {
-        const user = await User.findByIdAndDelete(UserId);
-        if (!user) return res.json({ message: "That user is not exist" });
-        res.json({ message: "User was deleted" });
-      } else if (user_who_try.equals(UserId)) {
-        const user = await User.findByIdAndDelete(user_who_try);
-        if (!user) return res.json({ message: "That user is not exist" });
-        res.json({ message: "User was deleted" });
-      } else res.json({ message: "no access" });
+      // console.log(req.user._id, user._id);
+      if (req.user._id.equals(user._id)) {
+        await User.findByIdAndDelete(req.params.id);
+        const cookies = req.cookies;
+        if (!cookies?.jwt) return res.sendStatus(204); //No content
+        res.clearCookie("jwt", {
+          httpOnly: true,
+        });
+        res.clearCookie("accessToken", {
+          httpOnly: true,
+        });
+        res.json({ message: "Cookie were cleared, user was deleted" });
+      } else return res.json({ message: "No access!" });
     } catch (error) {
-      // console.log(error)
-      res.json({ message: "Something gone wrong" });
+      console.log(error);
+      res.json({ message: "Deleting user error" });
     }
   }
-  // Update User
   async updateUser(req, res) {
     try {
-      const { id, email, username, password, full_name, role, verified } =
-        req.body;
-
-      const isadmin = await User.findById(req.user.id);
-      const user = await User.findById(id);
-
-      const user_who_try = isadmin._id;
-      const UserId = user._id;
-      // const userRole = isadmin.role
-
-      // console.log({user_who_try, UserId, userRole})
-
-      if (isadmin.role == "admin" || user_who_try.equals(UserId)) {
-        if (req.files) {
-          let fileName = Date.now().toString() + req.files.avatar.name;
-          const __dirname = dirname(fileURLToPath(import.meta.url));
-          req.files.avatar.mv(path.join(__dirname, "..", "uploads", fileName));
-          user.avatar = fileName || "";
+      const { full_name, username, password, email } = req.body;
+      const user = await User.findById(req.params.id);
+      if (req.user._id.equals(user._id)) {
+        user.full_name = full_name;
+        if (username) {
+          user.username = username;
+          if (!username.match(/^[a-zA-Z0-9._]*$/)) {
+            return res.json({
+              message: "Username isn't valid",
+            });
+          }
         }
-
-        if (role) user.role = role;
-        if (email) user.email = email;
-        if (username) user.username = username;
         if (password) {
           const salt = bcrypt.genSaltSync(10);
           const hash = bcrypt.hashSync(password, salt);
           user.password = hash;
         }
-        if (verified) user.verified = verified;
-        user.full_name = full_name;
+        if (email) {
+          var validRegex =
+            /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 
+          if (!email.match(validRegex)) {
+            return res.json({
+              message: "Email isn't valid",
+            });
+          }
+          user.email = email;
+          user.verified = false;
+          const v_token = jwt.sign(
+            {
+              email: user.email,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "10m" }
+          );
+
+          // verification email
+          const url = `${process.env.BASE_URL}verify/${v_token}`;
+          mailTransport().sendMail({
+            from: process.env.USER,
+            to: user.email,
+            subject: "Verify your email account",
+            html: `<h1>${url}</h1>`,
+          });
+          await user.save();
+          return res.json({
+            user,
+            message: "An Email sent to your account please verify",
+          });
+        }
         await user.save();
-
         res.json(user);
-      } else res.json("no access");
+      } else return res.json({ message: "No access!" });
     } catch (error) {
-      // console.log(error);
-      res.json({ message: "Something gone wrong" });
-    }
-  }
-  // Change Avatar
-  async changeAvatar(req, res) {
-    try {
-      const isadmin = await User.findById(req.user.id);
-      const user = await User.findById(req.params.id);
-
-      const user_who_try = isadmin._id;
-      const UserId = user._id;
-
-      if (isadmin.role == "admin") {
-        if (req.files) {
-          let fileName = Date.now().toString() + req.files.image.name;
-          const __dirname = dirname(fileURLToPath(import.meta.url));
-          req.files.image.mv(path.join(__dirname, "..", "uploads", fileName));
-          user.avatar = fileName || "";
-        }
-        await user.save();
-        res.json("Avatar was changed");
-      } else if (user_who_try.equals(UserId)) {
-        if (req.files) {
-          let fileName = Date.now().toString() + req.files.image.name;
-          const __dirname = dirname(fileURLToPath(import.meta.url));
-          req.files.image.mv(path.join(__dirname, "..", "uploads", fileName));
-          isadmin.avatar = fileName || "";
-        }
-        await isadmin.save();
-        res.json("Avatar was changed");
-      } else res.json({ message: "no access" });
-    } catch (error) {
-      // console.log(error)
-      res.json({ message: "Something gone wrong" });
+      console.log(error);
+      res.json({ message: "Updating user error" });
     }
   }
 }

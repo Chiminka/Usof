@@ -2,23 +2,38 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mailTransport from "../utils/mailTransport.js";
+import asyncHandler from "express-async-handler";
+import { createMainCalendar } from "../utils/createMainCalendar.js";
 
 export class AuthController {
   async register(req, res) {
     try {
-      const { username, password, email, repeatPassword } = req.body;
+      const { username, full_name, password, email, repeatPassword } = req.body;
 
       if (!username || !password || !email || !repeatPassword)
-        return res
-          .status(StatusCodes.NO_CONTENT)
-          .json({ message: "Content can not be empty" });
+        return res.json({ message: "Content can not be empty" });
 
       if (password === repeatPassword) {
-        const isUsed = await User.findOne({ username });
-
-        if (isUsed) {
+        const usernameExist = await User.findOne({ username });
+        const emailExist = await User.findOne({ email });
+        if (emailExist || usernameExist) {
           return res.json({
-            message: "This username already is taken",
+            message: "These username or email already are taken",
+          });
+        }
+
+        var validRegex =
+          /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+
+        if (!email.match(validRegex)) {
+          return res.json({
+            message: "Email isn't valid",
+          });
+        }
+
+        if (!username.match(/^[a-zA-Z0-9._]*$/)) {
+          return res.json({
+            message: "Username isn't valid",
           });
         }
 
@@ -26,29 +41,26 @@ export class AuthController {
         const hash = bcrypt.hashSync(password, salt);
 
         const newUser = new User({
+          full_name,
           username,
           password: hash,
           email,
         });
 
-        // const token = jwt.sign(
-        //   {
-        //     id: newUser._id,
-        //   },
-        //   process.env.JWT_SECRET,
-        //   { expiresIn: "30d" }
-        // );
-
         const v_token = jwt.sign(
           {
-            id: newUser._id,
+            email: newUser.email,
           },
           process.env.JWT_SECRET,
-          { expiresIn: "1h" }
+          { expiresIn: "10m" }
         );
 
-        // verification email
         await newUser.save();
+        const user = await User.findOne({ username });
+        console.log(user.id);
+        createMainCalendar(user);
+
+        // verification email
         const url = `${process.env.BASE_URL}verify/${v_token}`;
         mailTransport().sendMail({
           from: process.env.USER,
@@ -59,44 +71,39 @@ export class AuthController {
         ////////////////////////////////////////
         res.json({
           newUser,
-          // token,
           message: "An Email sent to your account please verify",
         });
       } else return res.json({ message: "Different passwords" });
     } catch (error) {
+      console.log(error);
       res.json({ message: "Creating user error" });
     }
   }
   async login(req, res) {
     try {
-      const { usernameOrEmail, password } = req.body;
-      let user = await User.findOne({ username: usernameOrEmail });
+      const { username_or_email, password } = req.body;
+
+      if (!username_or_email || !password)
+        return res.json({ message: "Content can not be empty" });
+
+      let user = await User.findOne({ email: username_or_email });
+
       if (!user) {
-        user = await User.findOne({ email: usernameOrEmail });
+        user = await User.findOne({ username: username_or_email });
       }
+
       if (!user) {
         return res.json({ success: false, message: "User not exist" });
       }
 
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
-      if (!isPasswordCorrect) {
-        return res.json({ success: false, message: "Uncorrect password" });
-      }
+         const v_token = jwt.sign(
+           {
+             email: user.email,
+           },
+           process.env.JWT_SECRET,
+           { expiresIn: "10m" }
+         );
 
-      const token = jwt.sign(
-        {
-          id: user._id,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "30d" }
-      );
-      const v_token = jwt.sign(
-        {
-          id: user._id,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
       if (!user.verified) {
         const url = `${process.env.BASE_URL}verify/${v_token}`;
         mailTransport().sendMail({
@@ -107,25 +114,68 @@ export class AuthController {
         });
         return res.json({ message: "An Email sent to your account again" });
       }
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (!isPasswordCorrect) {
+        return res.json({ success: false, message: "Uncorrect password" });
+      }
+
+      const accessToken = jwt.sign(
+        {
+          UserInfo: {
+            email: user.email,
+          },
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "15m" }
+      );
+
+      const refreshToken = jwt.sign(
+        { email: user.email },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // Create secure cookie with refresh token
+      res.cookie("jwt", refreshToken, {
+        httpOnly: true, //accessible only by web server
+        maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+      });
+      // Create secure cookie with refresh token
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true, //accessible only by web server
+        maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+      });
+      
       res.json({
-        token,
         user,
         message: "You are signed in",
       });
     } catch (error) {
-      // console.log(error);
+      console.log(error);
       return res.json({ message: "Autorization error" });
     }
   }
   async logout(req, res) {
-    req.logout();
-    req.session = null;
-    res.redirect("/login");
+    const cookies = req.cookies;
+    if (!cookies?.jwt) return res.sendStatus(204); //No content
+    res.clearCookie("jwt", { httpOnly: true });
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+    });
+    res.json({ message: "Cookie cleared" });
   }
   async verifyEmail(req, res) {
     const token = req.params.token;
-    const decode = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decode.id);
+
+    jwt.verify(
+      token,
+      process.env.JWT_SECRET,
+      asyncHandler(async (err, decoded) => {
+        req.decoded = decoded.email;
+        if (err) return res.status(403).json({ message: "Forbidden" });
+      })
+    );
+    const user = await User.findOne({ email: req.decoded });
     if (!user)
       return res.json({ success: false, message: "Sorry, user not found!" });
 
@@ -142,26 +192,14 @@ export class AuthController {
   async getMe(req, res) {
     try {
       const user = await User.findById(req.user.id);
-
       if (!user) {
         return res.json({
           message: "That user is not exist",
         });
       }
-
-      const token = jwt.sign(
-        {
-          id: user._id,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "30d" }
-      );
-
       res.json({
         user,
-        token,
       });
-      // res.json(user)
     } catch (error) {
       res.json({ message: "Not access" });
     }
@@ -170,6 +208,8 @@ export class AuthController {
     try {
       const { email } = req.body;
 
+      if (!email) return res.json({ message: "Content can not be empty" });
+
       const user = await User.findOne({ email });
 
       if (!user)
@@ -177,10 +217,10 @@ export class AuthController {
 
       const v_token = jwt.sign(
         {
-          id: user._id,
+          email: user.email,
         },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "10m" }
       );
 
       // здесь ссылка на страницу с полями, в по нажатию на эту кнопку уже вот эта ссылка
@@ -200,13 +240,18 @@ export class AuthController {
     const { new_password, confirm_password } = req.body;
 
     if (!new_password || !confirm_password)
-      return res
-        .status(StatusCodes.NO_CONTENT)
-        .json({ message: "Content can not be empty" });
+      return res.json({ message: "Content can not be empty" });
 
     const token = req.params.token;
-    const decode = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decode.id);
+    jwt.verify(
+      token,
+      process.env.JWT_SECRET,
+      asyncHandler(async (err, decoded) => {
+        req.decoded = decoded.email;
+        if (err) return res.status(403).json({ message: "Forbidden" });
+      })
+    );
+    const user = await User.findOne({ email: req.decoded });
     if (!user)
       return res.json({ success: false, message: "Sorry, user not found!" });
 
