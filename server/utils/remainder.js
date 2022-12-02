@@ -65,8 +65,12 @@ export const remainder = async () => {
           date.getFullYear(),
           date.getMonth() + 1,
           date.getDate(),
-          date.getUTCHours() + 1,
+          date.getUTCHours() - 1,
         ].join("-");
+
+        // 6 5 - 5 4
+        // 6 5 - 4 3
+
         if (
           [
             event[i].date_start.getFullYear(),
@@ -93,6 +97,7 @@ export const remainder = async () => {
           date.getUTCHours(),
           date.getMinutes() + 5,
         ].join("-");
+
         if (
           [
             event[i].date_start.getFullYear(),
